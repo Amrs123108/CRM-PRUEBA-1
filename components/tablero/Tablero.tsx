@@ -31,6 +31,7 @@ import {
   ModalConfig,
 } from "./modales";
 import ModalCampos from "./ModalCampos";
+import PanelCliente from "./PanelCliente";
 
 type Props = {
   etapasIniciales: EtapaConClientes[];
@@ -54,6 +55,7 @@ export default function Tablero({ etapasIniciales, diasAviso, campos }: Props) {
   const [enDrag, setEnDrag] = useState<ClienteCompleto | null>(null);
   const [snapshot, setSnapshot] = useState<EtapaConClientes[] | null>(null);
   const [modal, setModal] = useState<ModalActivo>(null);
+  const [panelClienteId, setPanelClienteId] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
 
   // Sincroniza con los datos del servidor tras cada revalidación
@@ -200,6 +202,11 @@ export default function Tablero({ etapasIniciales, diasAviso, campos }: Props) {
 
   const etapasPlanas = columnas.map(({ clientes: _, ...etapa }) => etapa);
 
+  // El panel siempre lee la versión más fresca del cliente (tras editar/subir)
+  const clientePanel = panelClienteId
+    ? columnas.flatMap((c) => c.clientes).find((c) => c.id === panelClienteId) ?? null
+    : null;
+
   return (
     <div className="flex h-dvh flex-col bg-zinc-50">
       {/* Barra superior */}
@@ -283,9 +290,7 @@ export default function Tablero({ etapasIniciales, diasAviso, campos }: Props) {
                 diasAviso={diasAviso}
                 esPrimera={i === 0}
                 esUltima={i === columnas.length - 1}
-                alAbrirCliente={(cliente) =>
-                  setModal({ tipo: "editar-cliente", cliente })
-                }
+                alAbrirCliente={(cliente) => setPanelClienteId(cliente.id)}
                 alNuevoCliente={(etapaId) =>
                   setModal({ tipo: "nuevo-cliente", etapaId })
                 }
@@ -306,6 +311,18 @@ export default function Tablero({ etapasIniciales, diasAviso, campos }: Props) {
             )}
           </DragOverlay>
         </DndContext>
+      )}
+
+      {/* Panel de detalle del cliente */}
+      {clientePanel && (
+        <PanelCliente
+          cliente={clientePanel}
+          etapa={etapasPlanas.find((e) => e.id === clientePanel.etapaId)}
+          diasAviso={diasAviso}
+          alCerrar={() => setPanelClienteId(null)}
+          alEditar={(cliente) => setModal({ tipo: "editar-cliente", cliente })}
+          alEliminar={(cliente) => setModal({ tipo: "eliminar-cliente", cliente })}
+        />
       )}
 
       {/* Aviso flotante de error */}
@@ -339,7 +356,10 @@ export default function Tablero({ etapasIniciales, diasAviso, campos }: Props) {
         <ModalEliminarCliente
           cliente={modal.cliente}
           alCerrar={() => setModal(null)}
-          alEliminado={() => setModal(null)}
+          alEliminado={() => {
+            setModal(null);
+            setPanelClienteId(null);
+          }}
         />
       )}
       {modal?.tipo === "nueva-etapa" && (
