@@ -17,6 +17,33 @@ import {
 import type { EtapaConClientes, ClienteCompleto } from "@/lib/tipos";
 import Tarjeta from "./Tarjeta";
 
+// Degradado diagonal del color de la etapa, estilo de la referencia visual:
+// parte del color base y termina en un tono más brillante con leve giro de matiz
+function hexAHsl(hex: string): [number, number, number] {
+  const n = parseInt(hex.slice(1), 16);
+  const r = ((n >> 16) & 255) / 255;
+  const g = ((n >> 8) & 255) / 255;
+  const b = (n & 255) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  if (max === min) return [0, 0, l * 100];
+  const d = max - min;
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  let h: number;
+  if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+  else if (max === g) h = ((b - r) / d + 2) / 6;
+  else h = ((r - g) / d + 4) / 6;
+  return [h * 360, s * 100, l * 100];
+}
+
+function degradadoEtapa(color: string): string {
+  const [h, s, l] = hexAHsl(color);
+  const inicio = `hsl(${h.toFixed(0)} ${Math.min(s + 6, 100).toFixed(0)}% ${Math.max(l - 4, 0).toFixed(0)}%)`;
+  const fin = `hsl(${((h + 16) % 360).toFixed(0)} ${Math.min(s + 10, 100).toFixed(0)}% ${Math.min(l + 10, 92).toFixed(0)}%)`;
+  return `linear-gradient(135deg, ${inicio} 0%, ${fin} 100%)`;
+}
+
 type Props = {
   etapa: EtapaConClientes;
   diasAviso: number;
@@ -64,21 +91,22 @@ export default function Columna({
           : "shadow-[0_10px_30px_rgba(31,45,80,0.12)]"
       }`}
     >
-      {/* Franja superior del color de la etapa */}
-      <div className="h-1.5 shrink-0" style={{ backgroundColor: etapa.color }} />
-
-      <header className="group flex items-center gap-3 px-5 py-4">
-        <h2 className="flex-1 text-[15px] font-bold uppercase leading-tight tracking-wide text-zinc-900 break-words">
+      {/* Header recubierto con degradado del color de la etapa */}
+      <header
+        className="group flex items-center gap-3 px-5 py-4"
+        style={{ background: degradadoEtapa(etapa.color) }}
+      >
+        <h2 className="flex-1 text-[15px] font-bold uppercase leading-tight tracking-wide text-white break-words [text-shadow:0_1px_2px_rgba(0,0,0,0.12)]">
           {etapa.nombre}
         </h2>
-        <span className="grid size-7 shrink-0 place-items-center rounded-full bg-zinc-100 text-sm font-semibold tabular-nums text-zinc-700">
+        <span className="grid size-7 shrink-0 place-items-center rounded-full bg-white/25 text-sm font-semibold tabular-nums text-white">
           {etapa.clientes.length}
         </span>
 
         <div className="relative shrink-0" ref={refMenu}>
           <button
             onClick={() => setMenuAbierto((v) => !v)}
-            className="rounded-md p-1 text-zinc-300 opacity-0 transition-opacity hover:bg-zinc-100 hover:text-zinc-600 group-hover:opacity-100 focus:opacity-100"
+            className="rounded-md p-1 text-white/70 opacity-0 transition-opacity hover:bg-white/20 hover:text-white group-hover:opacity-100 focus:opacity-100"
             aria-label={`Opciones de la etapa ${etapa.nombre}`}
           >
             <MoreHorizontal className="size-4" />
