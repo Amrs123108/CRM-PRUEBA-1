@@ -13,7 +13,13 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
-import { Plus, Settings, SquareKanban, SlidersHorizontal } from "lucide-react";
+import {
+  Plus,
+  Settings,
+  SquareKanban,
+  SlidersHorizontal,
+  FileSpreadsheet,
+} from "lucide-react";
 import type {
   EtapaConClientes,
   ClienteCompleto,
@@ -31,6 +37,7 @@ import {
   ModalConfig,
 } from "./modales";
 import ModalCampos from "./ModalCampos";
+import ModalImportar from "./ModalImportar";
 import PanelCliente from "./PanelCliente";
 
 type Props = {
@@ -48,6 +55,7 @@ type ModalActivo =
   | { tipo: "eliminar-etapa"; etapa: EtapaConClientes }
   | { tipo: "config" }
   | { tipo: "campos" }
+  | { tipo: "importar" }
   | null;
 
 export default function Tablero({ etapasIniciales, diasAviso, campos }: Props) {
@@ -237,6 +245,13 @@ export default function Tablero({ etapasIniciales, diasAviso, campos }: Props) {
           <SlidersHorizontal className="size-4" /> Campos
         </button>
         <button
+          onClick={() => setModal({ tipo: "importar" })}
+          disabled={columnas.length === 0}
+          className="flex items-center gap-1.5 rounded-lg border border-zinc-200 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+        >
+          <FileSpreadsheet className="size-4" /> Importar Excel
+        </button>
+        <button
           onClick={() => setModal({ tipo: "nueva-etapa" })}
           className="rounded-lg border border-zinc-200 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
         >
@@ -380,6 +395,13 @@ export default function Tablero({ etapasIniciales, diasAviso, campos }: Props) {
       )}
       {modal?.tipo === "campos" && (
         <ModalCampos campos={campos} alCerrar={() => setModal(null)} />
+      )}
+      {modal?.tipo === "importar" && (
+        <ModalImportar
+          etapas={etapasPlanas}
+          campos={campos}
+          alCerrar={() => setModal(null)}
+        />
       )}
     </div>
   );

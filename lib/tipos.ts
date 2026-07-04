@@ -27,6 +27,8 @@ export const ETIQUETA_TIPO_CAMPO: Record<TipoCampo, string> = {
   SELECCION: "Selección",
 };
 
+export const MAX_FILAS_IMPORTACION = 500;
+
 // Paleta para etapas (acento indigo + tonos sobrios, estilo Linear)
 export const COLORES_ETAPA = [
   "#6366f1", // indigo
