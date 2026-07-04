@@ -1,6 +1,6 @@
 // Almacenamiento de adjuntos.
-// Producción (Vercel): Vercel Blob (detectado por BLOB_READ_WRITE_TOKEN).
-// Dev local sin token: escribe en ./uploads y sirve vía /api/archivos.
+// Producción (Vercel): Vercel Blob (token clásico u OIDC + store id).
+// Dev local sin credenciales: escribe en ./uploads y sirve vía /api/archivos.
 import { mkdir, writeFile, unlink } from "fs/promises";
 import path from "path";
 import { put, del } from "@vercel/blob";
@@ -22,7 +22,11 @@ export function esImagen(tipoMime: string): boolean {
 const DIR_UPLOADS = path.join(process.cwd(), "uploads");
 
 function usarBlob(): boolean {
-  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+  // Token clásico, o autenticación OIDC de Vercel (store conectado al proyecto)
+  return Boolean(
+    process.env.BLOB_READ_WRITE_TOKEN ||
+      (process.env.BLOB_STORE_ID && process.env.VERCEL_OIDC_TOKEN)
+  );
 }
 
 // Nombre físico seguro: uuid + extensión validada (nunca el nombre original)

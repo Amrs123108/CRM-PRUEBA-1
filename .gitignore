@@ -48,3 +48,6 @@ dev.db-journal
 
 # adjuntos subidos en dev local
 /uploads
+
+.vercel
+.env*
