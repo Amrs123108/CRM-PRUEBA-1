@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CRM de prueba V1 — Proyecto A&C
 
-## Getting Started
+Tablero Kanban de clientes con etapas y campos 100% configurables desde la
+interfaz. Versión de prueba para demostración.
 
-First, run the development server:
+## Funciones
+
+- **Kanban con drag & drop**: arrastra clientes entre etapas; el orden se guarda.
+- **Etapas configurables**: crear, renombrar, cambiar color, reordenar y
+  eliminar columnas desde la UI (al eliminar, elige a dónde mover los clientes).
+- **Semáforo de vencimiento**: Tarde / Cerca de vencer / A tiempo según la
+  fecha límite de cada cliente; los días de aviso se configuran en ⚙.
+- **Campos personalizados** (botón "Campos"): texto, número, fecha o selección
+  con opciones — deciden qué información capturar por cliente.
+- **Panel de detalle**: clic en una tarjeta muestra toda la información y los
+  adjuntos; se pueden subir imágenes (JPG/PNG/WebP/GIF) y PDF de hasta 8 MB.
+- **Importación por Excel**: sube un `.xlsx`, mapea cada columna a un campo
+  (o crea el campo al vuelo) e importa hasta 500 filas con reporte de
+  advertencias.
+
+## Stack
+
+- Next.js 16 (App Router) + Tailwind CSS v4
+- Prisma 7 + SQLite en desarrollo local (migrará a Vercel Postgres en producción)
+- Adjuntos en disco local vía `./uploads` (migrará a Vercel Blob en producción)
+
+## Desarrollo local
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npx prisma migrate dev   # crea la base de datos local (dev.db)
+npm run dev              # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Datos de demostración (ficticios): `npx tsx scripts/seed-demo.ts`
+Vaciar el tablero: `npx tsx scripts/seed-demo.ts --limpiar`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+> **Nota**: `dev.db` y `uploads/` están fuera de git; nunca subir datos
+> reales de clientes al repositorio.
