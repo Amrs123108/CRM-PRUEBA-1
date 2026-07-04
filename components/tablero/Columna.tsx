@@ -40,7 +40,7 @@ export default function Columna({
   alEliminarEtapa,
   alMoverEtapa,
 }: Props) {
-  const { setNodeRef } = useDroppable({
+  const { setNodeRef, isOver } = useDroppable({
     id: `col-${etapa.id}`,
     data: { tipo: "columna", etapaId: etapa.id },
   });
@@ -57,8 +57,15 @@ export default function Columna({
   }, [menuAbierto]);
 
   return (
-    <section className="flex w-72 shrink-0 flex-col rounded-xl bg-zinc-100/70 max-h-full">
-      <header className="flex items-center gap-2 px-3 py-2.5">
+    <section
+      className={`animar-entrada flex w-72 shrink-0 flex-col rounded-xl max-h-full transition-colors duration-150 ${
+        isOver ? "bg-indigo-50/80 ring-2 ring-inset ring-indigo-300/60" : "bg-zinc-100/70"
+      }`}
+    >
+      <header
+        className="flex items-center gap-2 rounded-t-xl border-t-2 px-3 py-2.5"
+        style={{ borderTopColor: etapa.color }}
+      >
         <span
           className="size-2.5 rounded-full shrink-0"
           style={{ backgroundColor: etapa.color }}
@@ -66,7 +73,7 @@ export default function Columna({
         <h2 className="text-sm font-semibold text-zinc-800 truncate">
           {etapa.nombre}
         </h2>
-        <span className="rounded-full bg-zinc-200/80 px-1.5 py-0.5 text-[11px] font-medium text-zinc-600">
+        <span className="rounded-full bg-zinc-200/80 px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-zinc-600">
           {etapa.clientes.length}
         </span>
 

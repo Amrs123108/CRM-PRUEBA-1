@@ -100,10 +100,13 @@ export default function PanelCliente({
   return (
     <>
       {/* Fondo */}
-      <div className="fixed inset-0 z-40 bg-zinc-900/30" onClick={alCerrar} />
+      <div
+        className="animar-fondo fixed inset-0 z-40 bg-zinc-900/30 backdrop-blur-[2px]"
+        onClick={alCerrar}
+      />
 
       {/* Panel */}
-      <aside className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col bg-white shadow-2xl">
+      <aside className="animar-panel fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col bg-white shadow-2xl">
         <header className="flex items-start gap-3 border-b border-zinc-100 p-4">
           <div className="min-w-0 flex-1">
             <h2 className="text-base font-semibold text-zinc-900 break-words">

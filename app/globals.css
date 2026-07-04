@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fafafa;
+  --foreground: #18181b;
 }
 
 @theme inline {
@@ -12,15 +12,96 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: #e0e7ff; /* indigo-100 */
+  color: #312e81;
+}
+
+/* Scrollbars discretos (columnas y paneles) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #d4d4d8 transparent;
+}
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #d4d4d8;
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Animaciones de entrada — easing del sistema, solo al aparecer */
+@keyframes entrada-suave {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes entrada-escala {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes entrada-lateral {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes entrada-fondo {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animar-entrada {
+  animation: entrada-suave 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animar-modal {
+  animation: entrada-escala 0.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animar-panel {
+  animation: entrada-lateral 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animar-fondo {
+  animation: entrada-fondo 0.2s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animar-entrada,
+  .animar-modal,
+  .animar-panel,
+  .animar-fondo {
+    animation: none;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
 }

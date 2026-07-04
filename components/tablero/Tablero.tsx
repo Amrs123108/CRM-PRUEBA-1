@@ -209,6 +209,7 @@ export default function Tablero({ etapasIniciales, diasAviso, campos }: Props) {
   }
 
   const etapasPlanas = columnas.map(({ clientes: _, ...etapa }) => etapa);
+  const totalClientes = columnas.reduce((s, c) => s + c.clientes.length, 0);
 
   // El panel siempre lee la versión más fresca del cliente (tras editar/subir)
   const clientePanel = panelClienteId
@@ -218,42 +219,48 @@ export default function Tablero({ etapasIniciales, diasAviso, campos }: Props) {
   return (
     <div className="flex h-dvh flex-col bg-zinc-50">
       {/* Barra superior */}
-      <header className="flex items-center gap-3 border-b border-zinc-200 bg-white px-4 py-3">
-        <span className="flex size-8 items-center justify-center rounded-lg bg-indigo-600 text-white">
+      <header className="flex flex-wrap items-center gap-2 border-b border-zinc-200/80 bg-white/90 px-4 py-3 backdrop-blur sm:gap-3">
+        <span className="flex size-8 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-sm shadow-indigo-600/30">
           <SquareKanban className="size-4.5" />
         </span>
         <div className="mr-auto">
-          <h1 className="text-sm font-semibold text-zinc-900 leading-tight">
+          <h1 className="text-sm font-semibold tracking-tight text-zinc-900 leading-tight">
             CRM de prueba
           </h1>
-          <p className="text-xs text-zinc-400 leading-tight">
-            Tablero de clientes · V1
+          <p className="text-xs text-zinc-400 leading-tight tabular-nums">
+            {totalClientes} cliente{totalClientes === 1 ? "" : "s"} ·{" "}
+            {columnas.length} etapa{columnas.length === 1 ? "" : "s"}
           </p>
         </div>
 
         <button
           onClick={() => setModal({ tipo: "config" })}
-          className="rounded-lg border border-zinc-200 p-2 text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800"
+          className="rounded-lg border border-zinc-200 p-2 text-zinc-500 transition-colors hover:bg-zinc-50 hover:text-zinc-800"
           aria-label="Configuración"
+          title="Configuración"
         >
           <Settings className="size-4" />
         </button>
         <button
           onClick={() => setModal({ tipo: "campos" })}
-          className="flex items-center gap-1.5 rounded-lg border border-zinc-200 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+          className="flex items-center gap-1.5 rounded-lg border border-zinc-200 px-2.5 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 sm:px-3"
+          title="Campos del cliente"
         >
-          <SlidersHorizontal className="size-4" /> Campos
+          <SlidersHorizontal className="size-4" />
+          <span className="hidden sm:inline">Campos</span>
         </button>
         <button
           onClick={() => setModal({ tipo: "importar" })}
           disabled={columnas.length === 0}
-          className="flex items-center gap-1.5 rounded-lg border border-zinc-200 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-lg border border-zinc-200 px-2.5 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50 sm:px-3"
+          title="Importar clientes desde Excel"
         >
-          <FileSpreadsheet className="size-4" /> Importar Excel
+          <FileSpreadsheet className="size-4" />
+          <span className="hidden sm:inline">Importar Excel</span>
         </button>
         <button
           onClick={() => setModal({ tipo: "nueva-etapa" })}
-          className="rounded-lg border border-zinc-200 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+          className="rounded-lg border border-zinc-200 px-2.5 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 sm:px-3"
         >
           Nueva etapa
         </button>
@@ -262,9 +269,10 @@ export default function Tablero({ etapasIniciales, diasAviso, campos }: Props) {
             setModal({ tipo: "nuevo-cliente", etapaId: columnas[0]?.id ?? "" })
           }
           disabled={columnas.length === 0}
-          className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-2.5 py-2 text-sm font-medium text-white shadow-sm shadow-indigo-600/30 transition-colors hover:bg-indigo-700 disabled:opacity-50 sm:px-3"
         >
-          <Plus className="size-4" /> Nuevo cliente
+          <Plus className="size-4" />
+          <span className="hidden sm:inline">Nuevo cliente</span>
         </button>
       </header>
 
@@ -342,7 +350,7 @@ export default function Tablero({ etapasIniciales, diasAviso, campos }: Props) {
 
       {/* Aviso flotante de error */}
       {aviso && (
-        <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-lg bg-zinc-900 px-4 py-2 text-sm text-white shadow-lg">
+        <div className="animar-entrada fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-lg bg-zinc-900 px-4 py-2 text-sm text-white shadow-lg">
           {aviso}
         </div>
       )}

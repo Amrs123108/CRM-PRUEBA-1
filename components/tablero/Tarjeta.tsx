@@ -17,6 +17,13 @@ const ESTILO_BADGE: Record<EstadoVencimiento, string> = {
   "sin-fecha": "bg-zinc-100 text-zinc-500 ring-zinc-500/10",
 };
 
+const PUNTO_BADGE: Record<EstadoVencimiento, string> = {
+  tarde: "bg-red-500",
+  cerca: "bg-amber-500",
+  "a-tiempo": "bg-emerald-500",
+  "sin-fecha": "bg-zinc-400",
+};
+
 function formatearFecha(fecha: Date): string {
   return new Date(fecha).toLocaleDateString("es", {
     day: "2-digit",
@@ -47,8 +54,9 @@ export function ContenidoTarjeta({ cliente, diasAviso }: Pick<Props, "cliente" |
 
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <span
-          className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-medium ring-1 ring-inset ${ESTILO_BADGE[estado]}`}
+          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${ESTILO_BADGE[estado]}`}
         >
+          <span className={`size-1.5 rounded-full ${PUNTO_BADGE[estado]}`} />
           {ETIQUETA_ESTADO[estado]}
         </span>
         {cliente.fechaLimite && (
@@ -70,7 +78,13 @@ export function ContenidoTarjeta({ cliente, diasAviso }: Pick<Props, "cliente" |
           {valoresVisibles.map((v) => (
             <div key={v.id} className="flex gap-1 text-[11px] leading-4">
               <dt className="text-zinc-400 shrink-0">{v.campo.nombre}:</dt>
-              <dd className="text-zinc-600 truncate">{v.valor}</dd>
+              <dd
+                className={`text-zinc-600 truncate ${
+                  v.campo.tipo === "NUMERO" ? "tabular-nums" : ""
+                }`}
+              >
+                {v.valor}
+              </dd>
             </div>
           ))}
         </dl>
@@ -95,7 +109,7 @@ export default function Tarjeta({ cliente, diasAviso, alAbrir, arrastrando }: Pr
       {...attributes}
       {...listeners}
       onClick={() => alAbrir(cliente)}
-      className={`cursor-grab rounded-lg border border-zinc-200 bg-white p-3 shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing ${
+      className={`animar-entrada cursor-grab rounded-lg border border-zinc-200 bg-white p-3 shadow-sm transition-[box-shadow,border-color,transform] duration-150 hover:-translate-y-px hover:border-zinc-300 hover:shadow-md active:cursor-grabbing ${
         isDragging ? "opacity-40" : ""
       } ${arrastrando ? "shadow-lg ring-2 ring-indigo-400/40 rotate-2" : ""}`}
     >

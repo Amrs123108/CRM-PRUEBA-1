@@ -119,12 +119,12 @@ export default function ModalCampos({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/40 p-4"
+      className="animar-fondo fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/40 p-4 backdrop-blur-[2px]"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) alCerrar();
       }}
     >
-      <div className="w-full max-w-lg rounded-2xl bg-white p-5 shadow-xl max-h-[90vh] overflow-y-auto">
+      <div className="animar-modal w-full max-w-lg rounded-2xl bg-white p-5 shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="mb-1 flex items-center justify-between">
           <h2 className="text-base font-semibold text-zinc-900">
             Campos del cliente
