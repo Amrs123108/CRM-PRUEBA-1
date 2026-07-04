@@ -13,7 +13,7 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
-import { Plus, Settings, SquareKanban } from "lucide-react";
+import { Plus, Settings, SquareKanban, SlidersHorizontal } from "lucide-react";
 import type {
   EtapaConClientes,
   ClienteCompleto,
@@ -30,6 +30,7 @@ import {
   ModalEliminarCliente,
   ModalConfig,
 } from "./modales";
+import ModalCampos from "./ModalCampos";
 
 type Props = {
   etapasIniciales: EtapaConClientes[];
@@ -45,6 +46,7 @@ type ModalActivo =
   | { tipo: "editar-etapa"; etapa: EtapaConClientes }
   | { tipo: "eliminar-etapa"; etapa: EtapaConClientes }
   | { tipo: "config" }
+  | { tipo: "campos" }
   | null;
 
 export default function Tablero({ etapasIniciales, diasAviso, campos }: Props) {
@@ -222,6 +224,12 @@ export default function Tablero({ etapasIniciales, diasAviso, campos }: Props) {
           <Settings className="size-4" />
         </button>
         <button
+          onClick={() => setModal({ tipo: "campos" })}
+          className="flex items-center gap-1.5 rounded-lg border border-zinc-200 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+        >
+          <SlidersHorizontal className="size-4" /> Campos
+        </button>
+        <button
           onClick={() => setModal({ tipo: "nueva-etapa" })}
           className="rounded-lg border border-zinc-200 px-3 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
         >
@@ -349,6 +357,9 @@ export default function Tablero({ etapasIniciales, diasAviso, campos }: Props) {
       )}
       {modal?.tipo === "config" && (
         <ModalConfig diasAviso={diasAviso} alCerrar={() => setModal(null)} />
+      )}
+      {modal?.tipo === "campos" && (
+        <ModalCampos campos={campos} alCerrar={() => setModal(null)} />
       )}
     </div>
   );
