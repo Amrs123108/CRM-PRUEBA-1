@@ -1,0 +1,78 @@
+// Esquema del CRM de prueba V1 — Proyecto A&C
+// Dev local: SQLite. Producción (E5): se migra el datasource a Postgres (Neon/Vercel).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// Columnas del Kanban — 100% configurables desde la UI
+model Etapa {
+  id       String    @id @default(cuid())
+  nombre   String
+  color    String    @default("#6366f1")
+  orden    Int
+  clientes Cliente[]
+  creadoEn DateTime  @default(now())
+}
+
+// Registro base. Solo nombre y fechaLimite son fijos (el Kanban y el
+// semáforo dependen de ellos); todo lo demás vive en campos dinámicos.
+model Cliente {
+  id            String       @id @default(cuid())
+  nombre        String
+  fechaLimite   DateTime?
+  orden         Int          @default(0)
+  etapaId       String
+  etapa         Etapa        @relation(fields: [etapaId], references: [id])
+  valores       ValorCampo[]
+  adjuntos      Adjunto[]
+  creadoEn      DateTime     @default(now())
+  actualizadoEn DateTime     @updatedAt
+}
+
+// Constructor de campos tipo Airtable.
+// tipo: TEXTO | NUMERO | FECHA | SELECCION (SQLite no soporta enums)
+model DefinicionCampo {
+  id       String       @id @default(cuid())
+  nombre   String
+  tipo     String
+  opciones String? // JSON string con las opciones cuando tipo = SELECCION
+  orden    Int
+  valores  ValorCampo[]
+  creadoEn DateTime     @default(now())
+}
+
+model ValorCampo {
+  id        String          @id @default(cuid())
+  valor     String
+  clienteId String
+  cliente   Cliente         @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  campoId   String
+  campo     DefinicionCampo @relation(fields: [campoId], references: [id], onDelete: Cascade)
+
+  @@unique([clienteId, campoId])
+}
+
+// Imágenes y documentos adjuntos al cliente.
+// url: ruta local en dev; URL de Vercel Blob en producción.
+model Adjunto {
+  id        String   @id @default(cuid())
+  nombre    String
+  tipoMime  String
+  url       String
+  tamano    Int
+  clienteId String
+  cliente   Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  creadoEn  DateTime @default(now())
+}
+
+// Configuración global (fila única): días de aviso para "cerca de vencer"
+model Configuracion {
+  id        Int @id @default(1)
+  diasAviso Int @default(3)
+}
