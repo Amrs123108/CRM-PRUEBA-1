@@ -9,6 +9,9 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    // Las migraciones van por la conexión DIRECTA: a través del pooler de
+    // Neon (pgbouncer) el advisory lock de Prisma puede colgarse → P1002.
+    // El runtime de la app sigue usando DATABASE_URL (pooleada) vía adapter.
+    url: process.env["DATABASE_URL_UNPOOLED"] || process.env["DATABASE_URL"],
   },
 });
