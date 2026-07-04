@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -15,7 +15,16 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
-import { Plus, Settings, SquareKanban, Pencil, Trash2 } from "lucide-react";
+import {
+  Plus,
+  Settings,
+  SquareKanban,
+  Pencil,
+  Trash2,
+  Menu,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import type {
   EtapaConClientes,
   ClienteCompleto,
@@ -76,6 +85,10 @@ export default function Tablero({
   const [modal, setModal] = useState<ModalActivo>(null);
   const [panelClienteId, setPanelClienteId] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
+  const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);
+  const [indiceActivoMovil, setIndiceActivoMovil] = useState(0);
+  const refMenuMovil = useRef<HTMLDivElement>(null);
+  const refsColumna = useRef(new Map<string, HTMLDivElement>());
 
   // Sincroniza con los datos del servidor tras cada revalidación
   useEffect(() => setColumnas(etapasIniciales), [etapasIniciales]);
@@ -85,6 +98,42 @@ export default function Tablero({
     const t = setTimeout(() => setAviso(null), 4000);
     return () => clearTimeout(t);
   }, [aviso]);
+
+  // Vuelve a la primera etapa (vista móvil) cada vez que se cambia de módulo
+  useEffect(() => setIndiceActivoMovil(0), [moduloActivo?.id]);
+
+  // Evita quedar apuntando a una etapa que ya no existe (p. ej. tras eliminarla)
+  useEffect(() => {
+    setIndiceActivoMovil((i) => Math.min(i, Math.max(columnas.length - 1, 0)));
+  }, [columnas.length]);
+
+  useEffect(() => {
+    if (!menuMovilAbierto) return;
+    const cerrar = (e: MouseEvent) => {
+      if (!refMenuMovil.current?.contains(e.target as Node)) setMenuMovilAbierto(false);
+    };
+    document.addEventListener("mousedown", cerrar);
+    return () => document.removeEventListener("mousedown", cerrar);
+  }, [menuMovilAbierto]);
+
+  // Vista móvil: una etapa a la vez con scroll horizontal por "páginas"
+  function irAEtapaMovil(etapaId: string) {
+    refsColumna.current
+      .get(etapaId)
+      ?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  }
+
+  function irAEtapaRelativa(delta: 1 | -1) {
+    const destino = columnas[indiceActivoMovil + delta];
+    if (destino) irAEtapaMovil(destino.id);
+  }
+
+  function alScrollTablero(e: React.UIEvent<HTMLElement>) {
+    const el = e.currentTarget;
+    if (el.clientWidth === 0) return;
+    const indice = Math.round(el.scrollLeft / el.clientWidth);
+    setIndiceActivoMovil(Math.min(Math.max(indice, 0), columnas.length - 1));
+  }
 
   const sensores = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -238,13 +287,16 @@ export default function Tablero({
         <h1 className="mr-1 text-3xl font-bold tracking-tight text-zinc-900">
           CRM de prueba
         </h1>
-        <button
-          onClick={() => setModal({ tipo: "config" })}
-          className={pildoraBlanca}
-          title="Configuración del tablero"
-        >
-          <Settings className="size-4.5" /> Settings
-        </button>
+        {/* En móvil, Settings se agrupa dentro del menú "☰" */}
+        <div className="hidden sm:contents">
+          <button
+            onClick={() => setModal({ tipo: "config" })}
+            className={pildoraBlanca}
+            title="Configuración del tablero"
+          >
+            <Settings className="size-4.5" /> Settings
+          </button>
+        </div>
 
         {/* Módulos como píldoras */}
         {modulos.map((m) => {
@@ -285,29 +337,87 @@ export default function Tablero({
         </button>
 
         <div className="ml-auto flex flex-wrap items-center gap-3">
-          <button
-            onClick={() => setModal({ tipo: "campos" })}
-            disabled={!moduloActivo}
-            className={pildoraBlanca}
-            title="Campos del cliente"
-          >
-            Campos
-          </button>
-          <button
-            onClick={() => setModal({ tipo: "importar" })}
-            disabled={columnas.length === 0}
-            className={pildoraBlanca}
-            title="Importar clientes desde Excel"
-          >
-            Importar Excel
-          </button>
-          <button
-            onClick={() => setModal({ tipo: "nueva-etapa" })}
-            disabled={!moduloActivo}
-            className={pildoraBlanca}
-          >
-            Nueva etapa
-          </button>
+          <div className="hidden sm:contents">
+            <button
+              onClick={() => setModal({ tipo: "campos" })}
+              disabled={!moduloActivo}
+              className={pildoraBlanca}
+              title="Campos del cliente"
+            >
+              Campos
+            </button>
+            <button
+              onClick={() => setModal({ tipo: "importar" })}
+              disabled={columnas.length === 0}
+              className={pildoraBlanca}
+              title="Importar clientes desde Excel"
+            >
+              Importar Excel
+            </button>
+            <button
+              onClick={() => setModal({ tipo: "nueva-etapa" })}
+              disabled={!moduloActivo}
+              className={pildoraBlanca}
+            >
+              Nueva etapa
+            </button>
+          </div>
+
+          {/* Menú "más acciones" — solo en móvil */}
+          <div className="relative sm:hidden" ref={refMenuMovil}>
+            <button
+              onClick={() => setMenuMovilAbierto((v) => !v)}
+              className={pildoraBlanca}
+              aria-label="Más acciones"
+              title="Más acciones"
+            >
+              <Menu className="size-4.5" />
+            </button>
+            {menuMovilAbierto && (
+              <div className="absolute right-0 z-30 mt-1 w-52 rounded-xl border border-zinc-200 bg-white py-1 shadow-lg">
+                <button
+                  onClick={() => {
+                    setMenuMovilAbierto(false);
+                    setModal({ tipo: "config" });
+                  }}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50"
+                >
+                  <Settings className="size-4" /> Settings
+                </button>
+                <button
+                  onClick={() => {
+                    setMenuMovilAbierto(false);
+                    setModal({ tipo: "campos" });
+                  }}
+                  disabled={!moduloActivo}
+                  className="flex w-full items-center px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50 disabled:pointer-events-none disabled:opacity-40"
+                >
+                  Campos
+                </button>
+                <button
+                  onClick={() => {
+                    setMenuMovilAbierto(false);
+                    setModal({ tipo: "importar" });
+                  }}
+                  disabled={columnas.length === 0}
+                  className="flex w-full items-center px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50 disabled:pointer-events-none disabled:opacity-40"
+                >
+                  Importar Excel
+                </button>
+                <button
+                  onClick={() => {
+                    setMenuMovilAbierto(false);
+                    setModal({ tipo: "nueva-etapa" });
+                  }}
+                  disabled={!moduloActivo}
+                  className="flex w-full items-center px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50 disabled:pointer-events-none disabled:opacity-40"
+                >
+                  Nueva etapa
+                </button>
+              </div>
+            )}
+          </div>
+
           <button
             onClick={() =>
               setModal({ tipo: "nuevo-cliente", etapaId: columnas[0]?.id ?? "" })
@@ -368,24 +478,80 @@ export default function Tablero({
           onDragOver={alPasarSobre}
           onDragEnd={alSoltar}
         >
-          <main className="flex flex-1 gap-6 overflow-x-auto px-6 pb-8 pt-2 sm:px-10">
+          {/* Pestañas de etapa — solo en móvil: una columna a la vez */}
+          <div className="flex flex-col gap-2 px-4 pb-2 sm:hidden">
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => irAEtapaRelativa(-1)}
+                disabled={indiceActivoMovil === 0}
+                className="shrink-0 rounded-lg p-1.5 text-zinc-500 disabled:opacity-30"
+                aria-label="Etapa anterior"
+              >
+                <ChevronLeft className="size-5" />
+              </button>
+              <div className="flex-1 truncate text-center text-[13px] font-bold uppercase tracking-wide text-zinc-800">
+                {columnas[indiceActivoMovil]?.nombre}{" "}
+                <span className="font-normal normal-case text-zinc-400">
+                  ({columnas[indiceActivoMovil]?.clientes.length ?? 0})
+                </span>
+              </div>
+              <button
+                onClick={() => irAEtapaRelativa(1)}
+                disabled={indiceActivoMovil === columnas.length - 1}
+                className="shrink-0 rounded-lg p-1.5 text-zinc-500 disabled:opacity-30"
+                aria-label="Etapa siguiente"
+              >
+                <ChevronRight className="size-5" />
+              </button>
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {columnas.map((etapa, i) => (
+                <button
+                  key={etapa.id}
+                  onClick={() => irAEtapaMovil(etapa.id)}
+                  className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition ${
+                    i === indiceActivoMovil
+                      ? "bg-violet-600 text-white"
+                      : "bg-white/70 text-zinc-600"
+                  }`}
+                >
+                  {etapa.nombre}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <main
+            onScroll={alScrollTablero}
+            className={`flex flex-1 gap-0 overflow-x-auto px-0 pb-8 pt-2 snap-x snap-mandatory sm:gap-6 sm:px-10 sm:pt-2 sm:snap-none ${
+              enDrag ? "!snap-none" : ""
+            }`}
+          >
             {columnas.map((etapa, i) => (
-              <Columna
+              <div
                 key={etapa.id}
-                etapa={etapa}
-                diasAviso={diasAviso}
-                esPrimera={i === 0}
-                esUltima={i === columnas.length - 1}
-                alAbrirCliente={(cliente) => setPanelClienteId(cliente.id)}
-                alNuevoCliente={(etapaId) =>
-                  setModal({ tipo: "nuevo-cliente", etapaId })
-                }
-                alEditarEtapa={(et) => setModal({ tipo: "editar-etapa", etapa: et })}
-                alEliminarEtapa={(et) =>
-                  setModal({ tipo: "eliminar-etapa", etapa: et })
-                }
-                alMoverEtapa={alMoverEtapa}
-              />
+                ref={(el) => {
+                  if (el) refsColumna.current.set(etapa.id, el);
+                  else refsColumna.current.delete(etapa.id);
+                }}
+                className="w-full shrink-0 snap-center px-4 sm:w-80 sm:px-0"
+              >
+                <Columna
+                  etapa={etapa}
+                  diasAviso={diasAviso}
+                  esPrimera={i === 0}
+                  esUltima={i === columnas.length - 1}
+                  alAbrirCliente={(cliente) => setPanelClienteId(cliente.id)}
+                  alNuevoCliente={(etapaId) =>
+                    setModal({ tipo: "nuevo-cliente", etapaId })
+                  }
+                  alEditarEtapa={(et) => setModal({ tipo: "editar-etapa", etapa: et })}
+                  alEliminarEtapa={(et) =>
+                    setModal({ tipo: "eliminar-etapa", etapa: et })
+                  }
+                  alMoverEtapa={alMoverEtapa}
+                />
+              </div>
             ))}
           </main>
 

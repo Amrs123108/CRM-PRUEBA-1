@@ -85,7 +85,7 @@ export default function Columna({
 
   return (
     <section
-      className={`animar-entrada flex w-80 shrink-0 flex-col overflow-hidden rounded-2xl bg-white max-h-full transition-shadow duration-150 ${
+      className={`animar-entrada flex w-full flex-col overflow-hidden rounded-2xl bg-white max-h-full transition-shadow duration-150 ${
         isOver
           ? "shadow-[0_12px_34px_rgba(109,40,217,0.25)] ring-2 ring-violet-400/60"
           : "shadow-[0_10px_30px_rgba(31,45,80,0.12)]"
