@@ -26,7 +26,7 @@ export function estadoVencimiento(
 
 export const ETIQUETA_ESTADO: Record<EstadoVencimiento, string> = {
   tarde: "Tarde",
-  cerca: "Cerca de vencer",
+  cerca: "Por vencer",
   "a-tiempo": "A tiempo",
   "sin-fecha": "Sin fecha",
 };

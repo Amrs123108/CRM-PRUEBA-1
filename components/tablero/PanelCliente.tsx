@@ -19,11 +19,12 @@ import {
 } from "@/lib/semaforo";
 import { subirAdjunto, eliminarAdjunto } from "@/lib/acciones/adjuntos";
 
+// Badges sólidos, como en la referencia visual
 const ESTILO_BADGE: Record<EstadoVencimiento, string> = {
-  tarde: "bg-red-50 text-red-700 ring-red-600/20",
-  cerca: "bg-amber-50 text-amber-700 ring-amber-600/20",
-  "a-tiempo": "bg-emerald-50 text-emerald-700 ring-emerald-600/20",
-  "sin-fecha": "bg-zinc-100 text-zinc-500 ring-zinc-500/10",
+  tarde: "bg-red-500",
+  cerca: "bg-amber-500",
+  "a-tiempo": "bg-emerald-500",
+  "sin-fecha": "bg-zinc-400",
 };
 
 function formatearFecha(fecha: Date): string {
@@ -123,7 +124,7 @@ export default function PanelCliente({
                 </span>
               )}
               <span
-                className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${ESTILO_BADGE[estado]}`}
+                className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium text-white shadow-sm ${ESTILO_BADGE[estado]}`}
               >
                 {ETIQUETA_ESTADO[estado]}
               </span>

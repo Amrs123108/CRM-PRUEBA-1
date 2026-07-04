@@ -15,15 +15,7 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
-import {
-  Plus,
-  Settings,
-  SquareKanban,
-  SlidersHorizontal,
-  FileSpreadsheet,
-  Pencil,
-  Trash2,
-} from "lucide-react";
+import { Plus, Settings, SquareKanban, Pencil, Trash2 } from "lucide-react";
 import type {
   EtapaConClientes,
   ClienteCompleto,
@@ -228,160 +220,142 @@ export default function Tablero({
   }
 
   const etapasPlanas = columnas.map(({ clientes: _, ...etapa }) => etapa);
-  const totalClientes = columnas.reduce((s, c) => s + c.clientes.length, 0);
 
   // El panel siempre lee la versión más fresca del cliente (tras editar/subir)
   const clientePanel = panelClienteId
     ? columnas.flatMap((c) => c.clientes).find((c) => c.id === panelClienteId) ?? null
     : null;
 
-  return (
-    <div className="flex h-dvh flex-col bg-zinc-50">
-      {/* Barra superior */}
-      <header className="flex flex-wrap items-center gap-2 border-b border-zinc-200/80 bg-white/90 px-4 py-3 backdrop-blur sm:gap-3">
-        <span className="flex size-8 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-sm shadow-indigo-600/30">
-          <SquareKanban className="size-4.5" />
-        </span>
-        <div className="mr-auto">
-          <h1 className="text-sm font-semibold tracking-tight text-zinc-900 leading-tight">
-            CRM de prueba
-          </h1>
-          <p className="text-xs text-zinc-400 leading-tight tabular-nums">
-            {totalClientes} cliente{totalClientes === 1 ? "" : "s"} ·{" "}
-            {columnas.length} etapa{columnas.length === 1 ? "" : "s"}
-          </p>
-        </div>
+  const pildoraBlanca =
+    "flex items-center gap-2 rounded-xl border border-white/70 bg-white/90 px-4 py-2.5 text-[15px] font-medium text-zinc-800 shadow-[0_2px_8px_rgba(31,45,80,0.10)] transition hover:bg-white disabled:opacity-50";
+  const pildoraMorada =
+    "flex items-center gap-2 rounded-xl bg-violet-600 px-4 py-2.5 text-[15px] font-semibold text-white shadow-[0_4px_14px_rgba(109,40,217,0.35)] transition hover:bg-violet-700 disabled:opacity-50";
 
+  return (
+    <div className="flex h-dvh flex-col">
+      {/* Barra superior sobre el degradado */}
+      <header className="flex flex-wrap items-center gap-3 px-6 pb-4 pt-6 sm:px-10">
+        <h1 className="mr-1 text-3xl font-bold tracking-tight text-zinc-900">
+          CRM de prueba
+        </h1>
         <button
           onClick={() => setModal({ tipo: "config" })}
-          className="rounded-lg border border-zinc-200 p-2 text-zinc-500 transition-colors hover:bg-zinc-50 hover:text-zinc-800"
-          aria-label="Configuración"
-          title="Configuración"
+          className={pildoraBlanca}
+          title="Configuración del tablero"
         >
-          <Settings className="size-4" />
+          <Settings className="size-4.5" /> Settings
         </button>
-        <button
-          onClick={() => setModal({ tipo: "campos" })}
-          className="flex items-center gap-1.5 rounded-lg border border-zinc-200 px-2.5 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 sm:px-3"
-          title="Campos del cliente"
-        >
-          <SlidersHorizontal className="size-4" />
-          <span className="hidden sm:inline">Campos</span>
-        </button>
-        <button
-          onClick={() => setModal({ tipo: "importar" })}
-          disabled={columnas.length === 0}
-          className="flex items-center gap-1.5 rounded-lg border border-zinc-200 px-2.5 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50 sm:px-3"
-          title="Importar clientes desde Excel"
-        >
-          <FileSpreadsheet className="size-4" />
-          <span className="hidden sm:inline">Importar Excel</span>
-        </button>
-        <button
-          onClick={() => setModal({ tipo: "nueva-etapa" })}
-          disabled={!moduloActivo}
-          className="rounded-lg border border-zinc-200 px-2.5 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50 sm:px-3"
-        >
-          Nueva etapa
-        </button>
-        <button
-          onClick={() =>
-            setModal({ tipo: "nuevo-cliente", etapaId: columnas[0]?.id ?? "" })
-          }
-          disabled={columnas.length === 0}
-          className="flex items-center gap-1.5 rounded-lg bg-indigo-600 px-2.5 py-2 text-sm font-medium text-white shadow-sm shadow-indigo-600/30 transition-colors hover:bg-indigo-700 disabled:opacity-50 sm:px-3"
-        >
-          <Plus className="size-4" />
-          <span className="hidden sm:inline">Nuevo cliente</span>
-        </button>
-      </header>
 
-      {/* Pestañas de módulos */}
-      <nav
-        className="flex items-center gap-0.5 overflow-x-auto border-b border-zinc-200/80 bg-white px-4"
-        aria-label="Módulos"
-      >
+        {/* Módulos como píldoras */}
         {modulos.map((m) => {
           const activo = m.id === moduloActivo?.id;
-          return (
-            <span key={m.id} className="flex items-center">
-              <Link
-                href={`/?modulo=${m.id}`}
-                className={`whitespace-nowrap border-b-2 px-3 py-2.5 text-sm transition-colors ${
-                  activo
-                    ? "border-indigo-600 font-semibold text-indigo-700"
-                    : "border-transparent font-medium text-zinc-500 hover:text-zinc-800"
-                }`}
+          return activo ? (
+            <span key={m.id} className={`${pildoraMorada} cursor-default`}>
+              {m.nombre}
+              <button
+                onClick={() => setModal({ tipo: "renombrar-modulo", modulo: m })}
+                className="ml-1 rounded p-0.5 text-white/70 hover:bg-white/20 hover:text-white"
+                aria-label={`Renombrar módulo ${m.nombre}`}
+                title="Renombrar módulo"
               >
-                {m.nombre}
-              </Link>
-              {activo && (
-                <span className="flex items-center gap-0.5 pr-1">
-                  <button
-                    onClick={() => setModal({ tipo: "renombrar-modulo", modulo: m })}
-                    className="rounded p-1 text-zinc-300 hover:bg-zinc-100 hover:text-zinc-600"
-                    aria-label={`Renombrar módulo ${m.nombre}`}
-                    title="Renombrar módulo"
-                  >
-                    <Pencil className="size-3" />
-                  </button>
-                  <button
-                    onClick={() => setModal({ tipo: "eliminar-modulo", modulo: m })}
-                    className="rounded p-1 text-zinc-300 hover:bg-red-50 hover:text-red-500"
-                    aria-label={`Eliminar módulo ${m.nombre}`}
-                    title="Eliminar módulo"
-                  >
-                    <Trash2 className="size-3" />
-                  </button>
-                </span>
-              )}
+                <Pencil className="size-3.5" />
+              </button>
+              <button
+                onClick={() => setModal({ tipo: "eliminar-modulo", modulo: m })}
+                className="rounded p-0.5 text-white/70 hover:bg-white/20 hover:text-white"
+                aria-label={`Eliminar módulo ${m.nombre}`}
+                title="Eliminar módulo"
+              >
+                <Trash2 className="size-3.5" />
+              </button>
             </span>
+          ) : (
+            <Link key={m.id} href={`/?modulo=${m.id}`} className={pildoraBlanca}>
+              {m.nombre}
+            </Link>
           );
         })}
         <button
           onClick={() => setModal({ tipo: "nuevo-modulo" })}
-          className="ml-1 flex items-center gap-1 whitespace-nowrap rounded-md px-2 py-1.5 text-xs font-medium text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700"
+          className={`${pildoraBlanca} px-3`}
+          aria-label="Nuevo módulo"
+          title="Nuevo módulo"
         >
-          <Plus className="size-3.5" /> Módulo
+          <Plus className="size-4.5" />
         </button>
-      </nav>
+
+        <div className="ml-auto flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => setModal({ tipo: "campos" })}
+            disabled={!moduloActivo}
+            className={pildoraBlanca}
+            title="Campos del cliente"
+          >
+            Campos
+          </button>
+          <button
+            onClick={() => setModal({ tipo: "importar" })}
+            disabled={columnas.length === 0}
+            className={pildoraBlanca}
+            title="Importar clientes desde Excel"
+          >
+            Importar Excel
+          </button>
+          <button
+            onClick={() => setModal({ tipo: "nueva-etapa" })}
+            disabled={!moduloActivo}
+            className={pildoraBlanca}
+          >
+            Nueva etapa
+          </button>
+          <button
+            onClick={() =>
+              setModal({ tipo: "nuevo-cliente", etapaId: columnas[0]?.id ?? "" })
+            }
+            disabled={columnas.length === 0}
+            className={pildoraMorada}
+          >
+            <Plus className="size-4.5" /> Nuevo cliente
+          </button>
+        </div>
+      </header>
 
       {/* Tablero */}
       {!moduloActivo ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
-          <span className="flex size-14 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+          <span className="flex size-14 items-center justify-center rounded-2xl bg-white text-violet-600 shadow-[0_8px_24px_rgba(31,45,80,0.12)]">
             <SquareKanban className="size-7" />
           </span>
           <h2 className="text-lg font-semibold text-zinc-900">
             No hay módulos todavía
           </h2>
-          <p className="max-w-sm text-sm text-zinc-500">
+          <p className="max-w-sm text-sm text-zinc-600">
             Un módulo es un tablero independiente para cada proceso del negocio
             (por ejemplo: Ventas, Cobros Judiciales).
           </p>
           <button
             onClick={() => setModal({ tipo: "nuevo-modulo" })}
-            className="mt-2 flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+            className={`mt-2 ${pildoraMorada}`}
           >
             <Plus className="size-4" /> Crear primer módulo
           </button>
         </div>
       ) : columnas.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
-          <span className="flex size-14 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+          <span className="flex size-14 items-center justify-center rounded-2xl bg-white text-violet-600 shadow-[0_8px_24px_rgba(31,45,80,0.12)]">
             <SquareKanban className="size-7" />
           </span>
           <h2 className="text-lg font-semibold text-zinc-900">
             El módulo {moduloActivo.nombre} no tiene etapas
           </h2>
-          <p className="max-w-sm text-sm text-zinc-500">
+          <p className="max-w-sm text-sm text-zinc-600">
             Crea la primera etapa para empezar a organizar clientes. Las etapas
             son las columnas del tablero (por ejemplo: Prospección, Análisis,
             Aprobado).
           </p>
           <button
             onClick={() => setModal({ tipo: "nueva-etapa" })}
-            className="mt-2 flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+            className={`mt-2 ${pildoraMorada}`}
           >
             <Plus className="size-4" /> Crear primera etapa
           </button>
@@ -394,7 +368,7 @@ export default function Tablero({
           onDragOver={alPasarSobre}
           onDragEnd={alSoltar}
         >
-          <main className="flex flex-1 gap-3 overflow-x-auto p-4">
+          <main className="flex flex-1 gap-6 overflow-x-auto px-6 pb-8 pt-2 sm:px-10">
             {columnas.map((etapa, i) => (
               <Columna
                 key={etapa.id}
@@ -417,7 +391,7 @@ export default function Tablero({
 
           <DragOverlay>
             {enDrag && (
-              <div className="w-64 rounded-lg border border-zinc-200 bg-white p-3 shadow-lg ring-2 ring-indigo-400/40 rotate-2">
+              <div className="w-72 rotate-2 rounded-xl bg-white p-4 shadow-xl ring-2 ring-violet-400/50">
                 <ContenidoTarjeta cliente={enDrag} diasAviso={diasAviso} />
               </div>
             )}

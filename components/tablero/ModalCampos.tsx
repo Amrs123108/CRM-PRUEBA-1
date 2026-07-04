@@ -31,7 +31,7 @@ const ICONO_TIPO: Record<TipoCampo, typeof Type> = {
 };
 
 const estiloInput =
-  "w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20";
+  "w-full rounded-lg border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-500/20";
 const estiloLabel = "mb-1 block text-xs font-medium text-zinc-600";
 
 type Formulario = {
@@ -236,7 +236,7 @@ export default function ModalCampos({
                       onClick={() => setForm({ ...form, tipo: t })}
                       className={`flex flex-col items-center gap-1 rounded-lg border px-2 py-2 text-[11px] font-medium ${
                         form.tipo === t
-                          ? "border-indigo-500 bg-indigo-50 text-indigo-700"
+                          ? "border-violet-500 bg-violet-50 text-violet-700"
                           : "border-zinc-200 bg-white text-zinc-500 hover:border-zinc-300"
                       }`}
                     >
@@ -279,7 +279,7 @@ export default function ModalCampos({
               <button
                 type="submit"
                 disabled={ocupado}
-                className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-50"
+                className="rounded-lg bg-violet-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-violet-700 disabled:opacity-50"
               >
                 {ocupado ? "Guardando…" : "Guardar campo"}
               </button>
@@ -288,7 +288,7 @@ export default function ModalCampos({
         ) : (
           <button
             onClick={abrirCrear}
-            className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-500 hover:border-indigo-400 hover:text-indigo-600"
+            className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-500 hover:border-violet-400 hover:text-violet-600"
           >
             <Plus className="size-4" /> Agregar campo
           </button>

@@ -58,29 +58,27 @@ export default function Columna({
 
   return (
     <section
-      className={`animar-entrada flex w-72 shrink-0 flex-col rounded-xl max-h-full transition-colors duration-150 ${
-        isOver ? "bg-indigo-50/80 ring-2 ring-inset ring-indigo-300/60" : "bg-zinc-100/70"
+      className={`animar-entrada flex w-80 shrink-0 flex-col overflow-hidden rounded-2xl bg-white max-h-full transition-shadow duration-150 ${
+        isOver
+          ? "shadow-[0_12px_34px_rgba(109,40,217,0.25)] ring-2 ring-violet-400/60"
+          : "shadow-[0_10px_30px_rgba(31,45,80,0.12)]"
       }`}
     >
-      <header
-        className="flex items-center gap-2 rounded-t-xl border-t-2 px-3 py-2.5"
-        style={{ borderTopColor: etapa.color }}
-      >
-        <span
-          className="size-2.5 rounded-full shrink-0"
-          style={{ backgroundColor: etapa.color }}
-        />
-        <h2 className="text-sm font-semibold text-zinc-800 truncate">
+      {/* Franja superior del color de la etapa */}
+      <div className="h-1.5 shrink-0" style={{ backgroundColor: etapa.color }} />
+
+      <header className="group flex items-center gap-3 px-5 py-4">
+        <h2 className="flex-1 text-[15px] font-bold uppercase leading-tight tracking-wide text-zinc-900 break-words">
           {etapa.nombre}
         </h2>
-        <span className="rounded-full bg-zinc-200/80 px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-zinc-600">
+        <span className="grid size-7 shrink-0 place-items-center rounded-full bg-zinc-100 text-sm font-semibold tabular-nums text-zinc-700">
           {etapa.clientes.length}
         </span>
 
-        <div className="relative ml-auto" ref={refMenu}>
+        <div className="relative shrink-0" ref={refMenu}>
           <button
             onClick={() => setMenuAbierto((v) => !v)}
-            className="rounded-md p-1 text-zinc-400 hover:bg-zinc-200 hover:text-zinc-700"
+            className="rounded-md p-1 text-zinc-300 opacity-0 transition-opacity hover:bg-zinc-100 hover:text-zinc-600 group-hover:opacity-100 focus:opacity-100"
             aria-label={`Opciones de la etapa ${etapa.nombre}`}
           >
             <MoreHorizontal className="size-4" />
@@ -135,7 +133,7 @@ export default function Columna({
 
       <div
         ref={setNodeRef}
-        className="flex flex-1 flex-col gap-2 overflow-y-auto px-2 pb-2 min-h-24"
+        className="flex flex-1 flex-col gap-3 overflow-y-auto bg-[#f5f8fc] px-4 pb-3 pt-4 min-h-28"
       >
         <SortableContext
           items={etapa.clientes.map((c) => c.id)}
@@ -152,20 +150,22 @@ export default function Columna({
         </SortableContext>
 
         {etapa.clientes.length === 0 && (
-          <p className="rounded-lg border border-dashed border-zinc-300 px-3 py-6 text-center text-xs text-zinc-400">
-            Sin clientes en esta etapa.
-            <br />
-            Arrastra una tarjeta aquí o agrega uno nuevo.
-          </p>
+          <div className="rounded-xl bg-white/60 px-4 py-8 text-center shadow-[inset_0_0_0_1px_rgba(31,45,80,0.06)]">
+            <p className="text-[13px] text-zinc-400">
+              Sin clientes en esta etapa.
+              <br />
+              Arrastra una tarjeta aquí o agrega uno nuevo.
+            </p>
+          </div>
         )}
       </div>
 
-      <footer className="px-2 pb-2">
+      <footer className="bg-[#f5f8fc] px-4 pb-4">
         <button
           onClick={() => alNuevoCliente(etapa.id)}
-          className="flex w-full items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-zinc-500 hover:bg-zinc-200/70 hover:text-zinc-800"
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white py-2.5 text-[15px] font-medium text-zinc-700 shadow-sm transition-shadow hover:shadow"
         >
-          <Plus className="size-4" /> Agregar cliente
+          <Plus className="size-4 text-zinc-400" /> Agregar cliente
         </button>
       </footer>
     </section>

@@ -13,15 +13,17 @@
 }
 
 body {
-  background: var(--background);
+  /* Degradado azul → lavanda de la referencia visual */
+  background: linear-gradient(135deg, #d7e7fb 0%, #dde4f9 45%, #eadff5 100%);
+  background-attachment: fixed;
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
 ::selection {
-  background: #e0e7ff; /* indigo-100 */
-  color: #312e81;
+  background: #ede9fe; /* violet-100 */
+  color: #4c1d95;
 }
 
 /* Scrollbars discretos (columnas y paneles) */
