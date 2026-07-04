@@ -9,8 +9,15 @@ export async function obtenerConfiguracion() {
   });
 }
 
-export async function obtenerTablero(): Promise<EtapaConClientes[]> {
+export async function obtenerModulos() {
+  return prisma.modulo.findMany({ orderBy: { orden: "asc" } });
+}
+
+export async function obtenerTablero(
+  moduloId: string
+): Promise<EtapaConClientes[]> {
   return prisma.etapa.findMany({
+    where: { moduloId },
     orderBy: { orden: "asc" },
     include: {
       clientes: {
@@ -24,6 +31,9 @@ export async function obtenerTablero(): Promise<EtapaConClientes[]> {
   });
 }
 
-export async function obtenerCampos() {
-  return prisma.definicionCampo.findMany({ orderBy: { orden: "asc" } });
+export async function obtenerCampos(moduloId: string) {
+  return prisma.definicionCampo.findMany({
+    where: { moduloId },
+    orderBy: { orden: "asc" },
+  });
 }

@@ -1,4 +1,5 @@
 import type {
+  Modulo,
   Etapa,
   Cliente,
   ValorCampo,
@@ -15,7 +16,7 @@ export type ClienteCompleto = Cliente & {
 
 export type EtapaConClientes = Etapa & { clientes: ClienteCompleto[] };
 
-export type { Etapa, Cliente, DefinicionCampo, Adjunto };
+export type { Modulo, Etapa, Cliente, DefinicionCampo, Adjunto };
 
 export const TIPOS_CAMPO = ["TEXTO", "NUMERO", "FECHA", "SELECCION"] as const;
 export type TipoCampo = (typeof TIPOS_CAMPO)[number];

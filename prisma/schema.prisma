@@ -10,12 +10,25 @@ datasource db {
   provider = "postgresql"
 }
 
+// Módulos = pipelines independientes (ej. Ventas, Cobros Judiciales).
+// Cada uno tiene sus propias etapas y sus propios campos personalizados.
+model Modulo {
+  id       String            @id @default(cuid())
+  nombre   String
+  orden    Int
+  etapas   Etapa[]
+  campos   DefinicionCampo[]
+  creadoEn DateTime          @default(now())
+}
+
 // Columnas del Kanban — 100% configurables desde la UI
 model Etapa {
   id       String    @id @default(cuid())
   nombre   String
   color    String    @default("#6366f1")
   orden    Int
+  moduloId String
+  modulo   Modulo    @relation(fields: [moduloId], references: [id], onDelete: Cascade)
   clientes Cliente[]
   creadoEn DateTime  @default(now())
 }
@@ -43,6 +56,8 @@ model DefinicionCampo {
   tipo     String
   opciones String? // JSON string con las opciones cuando tipo = SELECCION
   orden    Int
+  moduloId String
+  modulo   Modulo       @relation(fields: [moduloId], references: [id], onDelete: Cascade)
   valores  ValorCampo[]
   creadoEn DateTime     @default(now())
 }

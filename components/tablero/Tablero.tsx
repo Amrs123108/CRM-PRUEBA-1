@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   DndContext,
   DragOverlay,
@@ -19,11 +21,14 @@ import {
   SquareKanban,
   SlidersHorizontal,
   FileSpreadsheet,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import type {
   EtapaConClientes,
   ClienteCompleto,
   DefinicionCampo,
+  Modulo,
 } from "@/lib/tipos";
 import { moverCliente } from "@/lib/acciones/clientes";
 import { moverEtapa } from "@/lib/acciones/etapas";
@@ -35,12 +40,16 @@ import {
   ModalEliminarEtapa,
   ModalEliminarCliente,
   ModalConfig,
+  ModalModulo,
+  ModalEliminarModulo,
 } from "./modales";
 import ModalCampos from "./ModalCampos";
 import ModalImportar from "./ModalImportar";
 import PanelCliente from "./PanelCliente";
 
 type Props = {
+  modulos: Modulo[];
+  moduloActivo: Modulo | null;
   etapasIniciales: EtapaConClientes[];
   diasAviso: number;
   campos: DefinicionCampo[];
@@ -56,9 +65,19 @@ type ModalActivo =
   | { tipo: "config" }
   | { tipo: "campos" }
   | { tipo: "importar" }
+  | { tipo: "nuevo-modulo" }
+  | { tipo: "renombrar-modulo"; modulo: Modulo }
+  | { tipo: "eliminar-modulo"; modulo: Modulo }
   | null;
 
-export default function Tablero({ etapasIniciales, diasAviso, campos }: Props) {
+export default function Tablero({
+  modulos,
+  moduloActivo,
+  etapasIniciales,
+  diasAviso,
+  campos,
+}: Props) {
+  const router = useRouter();
   const [columnas, setColumnas] = useState(etapasIniciales);
   const [enDrag, setEnDrag] = useState<ClienteCompleto | null>(null);
   const [snapshot, setSnapshot] = useState<EtapaConClientes[] | null>(null);
@@ -260,7 +279,8 @@ export default function Tablero({ etapasIniciales, diasAviso, campos }: Props) {
         </button>
         <button
           onClick={() => setModal({ tipo: "nueva-etapa" })}
-          className="rounded-lg border border-zinc-200 px-2.5 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 sm:px-3"
+          disabled={!moduloActivo}
+          className="rounded-lg border border-zinc-200 px-2.5 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50 sm:px-3"
         >
           Nueva etapa
         </button>
@@ -276,17 +296,86 @@ export default function Tablero({ etapasIniciales, diasAviso, campos }: Props) {
         </button>
       </header>
 
+      {/* Pestañas de módulos */}
+      <nav
+        className="flex items-center gap-0.5 overflow-x-auto border-b border-zinc-200/80 bg-white px-4"
+        aria-label="Módulos"
+      >
+        {modulos.map((m) => {
+          const activo = m.id === moduloActivo?.id;
+          return (
+            <span key={m.id} className="flex items-center">
+              <Link
+                href={`/?modulo=${m.id}`}
+                className={`whitespace-nowrap border-b-2 px-3 py-2.5 text-sm transition-colors ${
+                  activo
+                    ? "border-indigo-600 font-semibold text-indigo-700"
+                    : "border-transparent font-medium text-zinc-500 hover:text-zinc-800"
+                }`}
+              >
+                {m.nombre}
+              </Link>
+              {activo && (
+                <span className="flex items-center gap-0.5 pr-1">
+                  <button
+                    onClick={() => setModal({ tipo: "renombrar-modulo", modulo: m })}
+                    className="rounded p-1 text-zinc-300 hover:bg-zinc-100 hover:text-zinc-600"
+                    aria-label={`Renombrar módulo ${m.nombre}`}
+                    title="Renombrar módulo"
+                  >
+                    <Pencil className="size-3" />
+                  </button>
+                  <button
+                    onClick={() => setModal({ tipo: "eliminar-modulo", modulo: m })}
+                    className="rounded p-1 text-zinc-300 hover:bg-red-50 hover:text-red-500"
+                    aria-label={`Eliminar módulo ${m.nombre}`}
+                    title="Eliminar módulo"
+                  >
+                    <Trash2 className="size-3" />
+                  </button>
+                </span>
+              )}
+            </span>
+          );
+        })}
+        <button
+          onClick={() => setModal({ tipo: "nuevo-modulo" })}
+          className="ml-1 flex items-center gap-1 whitespace-nowrap rounded-md px-2 py-1.5 text-xs font-medium text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700"
+        >
+          <Plus className="size-3.5" /> Módulo
+        </button>
+      </nav>
+
       {/* Tablero */}
-      {columnas.length === 0 ? (
+      {!moduloActivo ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
           <span className="flex size-14 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
             <SquareKanban className="size-7" />
           </span>
           <h2 className="text-lg font-semibold text-zinc-900">
-            Tu tablero está vacío
+            No hay módulos todavía
           </h2>
           <p className="max-w-sm text-sm text-zinc-500">
-            Crea tu primera etapa para empezar a organizar clientes. Las etapas
+            Un módulo es un tablero independiente para cada proceso del negocio
+            (por ejemplo: Ventas, Cobros Judiciales).
+          </p>
+          <button
+            onClick={() => setModal({ tipo: "nuevo-modulo" })}
+            className="mt-2 flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+          >
+            <Plus className="size-4" /> Crear primer módulo
+          </button>
+        </div>
+      ) : columnas.length === 0 ? (
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
+          <span className="flex size-14 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+            <SquareKanban className="size-7" />
+          </span>
+          <h2 className="text-lg font-semibold text-zinc-900">
+            El módulo {moduloActivo.nombre} no tiene etapas
+          </h2>
+          <p className="max-w-sm text-sm text-zinc-500">
+            Crea la primera etapa para empezar a organizar clientes. Las etapas
             son las columnas del tablero (por ejemplo: Prospección, Análisis,
             Aprobado).
           </p>
@@ -385,11 +474,19 @@ export default function Tablero({ etapasIniciales, diasAviso, campos }: Props) {
           }}
         />
       )}
-      {modal?.tipo === "nueva-etapa" && (
-        <ModalEtapa etapa={null} alCerrar={() => setModal(null)} />
+      {modal?.tipo === "nueva-etapa" && moduloActivo && (
+        <ModalEtapa
+          etapa={null}
+          moduloId={moduloActivo.id}
+          alCerrar={() => setModal(null)}
+        />
       )}
       {modal?.tipo === "editar-etapa" && (
-        <ModalEtapa etapa={modal.etapa} alCerrar={() => setModal(null)} />
+        <ModalEtapa
+          etapa={modal.etapa}
+          moduloId={modal.etapa.moduloId}
+          alCerrar={() => setModal(null)}
+        />
       )}
       {modal?.tipo === "eliminar-etapa" && (
         <ModalEliminarEtapa
@@ -401,8 +498,28 @@ export default function Tablero({ etapasIniciales, diasAviso, campos }: Props) {
       {modal?.tipo === "config" && (
         <ModalConfig diasAviso={diasAviso} alCerrar={() => setModal(null)} />
       )}
-      {modal?.tipo === "campos" && (
-        <ModalCampos campos={campos} alCerrar={() => setModal(null)} />
+      {modal?.tipo === "campos" && moduloActivo && (
+        <ModalCampos
+          campos={campos}
+          moduloId={moduloActivo.id}
+          alCerrar={() => setModal(null)}
+        />
+      )}
+      {modal?.tipo === "nuevo-modulo" && (
+        <ModalModulo modulo={null} alCerrar={() => setModal(null)} />
+      )}
+      {modal?.tipo === "renombrar-modulo" && (
+        <ModalModulo modulo={modal.modulo} alCerrar={() => setModal(null)} />
+      )}
+      {modal?.tipo === "eliminar-modulo" && (
+        <ModalEliminarModulo
+          modulo={modal.modulo}
+          alCerrar={() => setModal(null)}
+          alEliminado={() => {
+            setModal(null);
+            router.push("/");
+          }}
+        />
       )}
       {modal?.tipo === "importar" && (
         <ModalImportar

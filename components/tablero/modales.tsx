@@ -7,12 +7,19 @@ import type {
   DefinicionCampo,
   Etapa,
   EtapaConClientes,
+  Modulo,
   TipoCampo,
 } from "@/lib/tipos";
 import { COLORES_ETAPA } from "@/lib/tipos";
 import { crearCliente, actualizarCliente, eliminarCliente } from "@/lib/acciones/clientes";
 import { crearEtapa, actualizarEtapa, eliminarEtapa } from "@/lib/acciones/etapas";
 import { actualizarDiasAviso } from "@/lib/acciones/config";
+import {
+  crearModulo,
+  renombrarModulo,
+  eliminarModulo,
+  contarContenidoModulo,
+} from "@/lib/acciones/modulos";
 
 // ---------- Base ----------
 
@@ -265,9 +272,11 @@ export function ModalCliente({
 
 export function ModalEtapa({
   etapa,
+  moduloId,
   alCerrar,
 }: {
   etapa: Etapa | null; // null = crear
+  moduloId: string;
   alCerrar: () => void;
 }) {
   const [nombre, setNombre] = useState(etapa?.nombre ?? "");
@@ -281,7 +290,7 @@ export function ModalEtapa({
     setError(null);
     const res = etapa
       ? await actualizarEtapa(etapa.id, { nombre, color })
-      : await crearEtapa(nombre, color);
+      : await crearEtapa(moduloId, nombre, color);
     setGuardando(false);
     if (res.ok) alCerrar();
     else setError(res.error);
@@ -452,6 +461,151 @@ export function ModalEliminarCliente({
           </button>
           <button onClick={confirmar} disabled={eliminando} className={estiloBotonPeligro}>
             {eliminando ? "Eliminando…" : "Eliminar"}
+          </button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+// ---------- Módulo (crear / renombrar) ----------
+
+export function ModalModulo({
+  modulo,
+  alCerrar,
+}: {
+  modulo: Modulo | null; // null = crear
+  alCerrar: () => void;
+}) {
+  const [nombre, setNombre] = useState(modulo?.nombre ?? "");
+  const [error, setError] = useState<string | null>(null);
+  const [guardando, setGuardando] = useState(false);
+
+  async function guardar(e: FormEvent) {
+    e.preventDefault();
+    setGuardando(true);
+    setError(null);
+    const res = modulo
+      ? await renombrarModulo(modulo.id, nombre)
+      : await crearModulo(nombre);
+    setGuardando(false);
+    if (res.ok) alCerrar();
+    else setError(res.error);
+  }
+
+  return (
+    <Modal
+      titulo={modulo ? "Renombrar módulo" : "Nuevo módulo"}
+      alCerrar={alCerrar}
+    >
+      <form onSubmit={guardar} className="space-y-4">
+        <div>
+          <label className={estiloLabel}>Nombre *</label>
+          <input
+            autoFocus
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            className={estiloInput}
+            placeholder="Ej. Ventas, Cobros Judiciales, Soporte…"
+          />
+          {!modulo && (
+            <p className="mt-1.5 text-xs text-zinc-400">
+              Un módulo es un tablero independiente con sus propias etapas y
+              campos (por ejemplo, un proceso distinto del negocio).
+            </p>
+          )}
+        </div>
+        <MensajeError mensaje={error} />
+        <div className="flex justify-end gap-2 pt-1">
+          <button type="button" onClick={alCerrar} className={estiloBotonSecundario}>
+            Cancelar
+          </button>
+          <button type="submit" disabled={guardando} className={estiloBotonPrimario}>
+            {guardando ? "Guardando…" : "Guardar"}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+// ---------- Eliminar módulo ----------
+
+export function ModalEliminarModulo({
+  modulo,
+  alCerrar,
+  alEliminado,
+}: {
+  modulo: Modulo;
+  alCerrar: () => void;
+  alEliminado: () => void;
+}) {
+  const [contenido, setContenido] = useState<{
+    etapas: number;
+    clientes: number;
+  } | null>(null);
+  const [confirmacion, setConfirmacion] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [eliminando, setEliminando] = useState(false);
+
+  useEffect(() => {
+    contarContenidoModulo(modulo.id).then(setContenido);
+  }, [modulo.id]);
+
+  async function confirmar() {
+    setEliminando(true);
+    setError(null);
+    const res = await eliminarModulo(modulo.id);
+    setEliminando(false);
+    if (res.ok) alEliminado();
+    else setError(res.error);
+  }
+
+  const requiereTexto = (contenido?.clientes ?? 0) > 0;
+  const textoValido = !requiereTexto || confirmacion.trim() === modulo.nombre;
+
+  return (
+    <Modal titulo="Eliminar módulo" alCerrar={alCerrar}>
+      <div className="space-y-4">
+        <p className="text-sm text-zinc-600">
+          ¿Seguro que quieres eliminar el módulo{" "}
+          <strong className="text-zinc-900">{modulo.nombre}</strong>?
+        </p>
+        {contenido === null ? (
+          <p className="text-xs text-zinc-400">Calculando contenido…</p>
+        ) : (
+          (contenido.etapas > 0 || contenido.clientes > 0) && (
+            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800">
+              Se eliminarán <strong>{contenido.etapas} etapa(s)</strong>,{" "}
+              <strong>{contenido.clientes} cliente(s)</strong> con todos sus
+              datos y adjuntos. Esta acción no se puede deshacer.
+            </p>
+          )
+        )}
+        {requiereTexto && (
+          <div>
+            <label className={estiloLabel}>
+              Escribe el nombre del módulo para confirmar
+            </label>
+            <input
+              value={confirmacion}
+              onChange={(e) => setConfirmacion(e.target.value)}
+              className={estiloInput}
+              placeholder={modulo.nombre}
+            />
+          </div>
+        )}
+        <MensajeError mensaje={error} />
+        <div className="flex justify-end gap-2">
+          <button onClick={alCerrar} className={estiloBotonSecundario}>
+            Cancelar
+          </button>
+          <button
+            onClick={confirmar}
+            disabled={eliminando || contenido === null || !textoValido}
+            className={estiloBotonPeligro}
+          >
+            {eliminando ? "Eliminando…" : "Eliminar módulo"}
           </button>
         </div>
       </div>

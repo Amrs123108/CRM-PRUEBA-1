@@ -141,9 +141,11 @@ export async function importarClientes(datos: {
       return { ok: false, error: "Hay un campo nuevo con nombre o tipo inválido" };
   }
 
-  // 1. Crea los campos nuevos (una sola vez, aunque se usen en varias columnas no —
-  //    cada columna "nuevo-campo" crea el suyo)
-  const maxOrden = await prisma.definicionCampo.aggregate({ _max: { orden: true } });
+  // 1. Crea los campos nuevos dentro del módulo de la etapa destino
+  const maxOrden = await prisma.definicionCampo.aggregate({
+    where: { moduloId: etapa.moduloId },
+    _max: { orden: true },
+  });
   let ordenSiguiente = (maxOrden._max.orden ?? -1) + 1;
   const campoPorColumna = new Map<number, string>();
 
@@ -154,6 +156,8 @@ export async function importarClientes(datos: {
         where: { id: destino.campoId },
       });
       if (!existe) return { ok: false, error: "Un campo asignado ya no existe" };
+      if (existe.moduloId !== etapa.moduloId)
+        return { ok: false, error: "Un campo asignado pertenece a otro módulo" };
       campoPorColumna.set(i, destino.campoId);
     } else if (destino.tipo === "nuevo-campo") {
       const creado = await prisma.definicionCampo.create({
@@ -161,6 +165,7 @@ export async function importarClientes(datos: {
           nombre: destino.nombre.trim().slice(0, 60),
           tipo: destino.tipoCampo,
           orden: ordenSiguiente++,
+          moduloId: etapa.moduloId,
         },
       });
       campoPorColumna.set(i, creado.id);

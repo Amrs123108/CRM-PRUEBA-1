@@ -22,6 +22,7 @@ function normalizarOpciones(opciones: string[]): string[] {
 }
 
 export async function crearCampo(datos: {
+  moduloId: string;
   nombre: string;
   tipo: string;
   opciones?: string[];
@@ -29,6 +30,11 @@ export async function crearCampo(datos: {
   const n = esquemaNombre.safeParse(datos.nombre);
   if (!n.success) return { ok: false, error: n.error.issues[0].message };
   if (!validarTipo(datos.tipo)) return { ok: false, error: "Tipo de campo inválido" };
+
+  const modulo = await prisma.modulo.findUnique({
+    where: { id: datos.moduloId },
+  });
+  if (!modulo) return { ok: false, error: "El módulo no existe" };
 
   let opciones: string | null = null;
   if (datos.tipo === "SELECCION") {
@@ -38,13 +44,17 @@ export async function crearCampo(datos: {
     opciones = JSON.stringify(limpias);
   }
 
-  const max = await prisma.definicionCampo.aggregate({ _max: { orden: true } });
+  const max = await prisma.definicionCampo.aggregate({
+    where: { moduloId: datos.moduloId },
+    _max: { orden: true },
+  });
   await prisma.definicionCampo.create({
     data: {
       nombre: n.data,
       tipo: datos.tipo,
       opciones,
       orden: (max._max.orden ?? -1) + 1,
+      moduloId: datos.moduloId,
     },
   });
   revalidatePath("/");
@@ -84,7 +94,10 @@ export async function moverCampo(
   id: string,
   direccion: -1 | 1
 ): Promise<Resultado> {
+  const actual = await prisma.definicionCampo.findUnique({ where: { id } });
+  if (!actual) return { ok: false, error: "El campo no existe" };
   const campos = await prisma.definicionCampo.findMany({
+    where: { moduloId: actual.moduloId },
     orderBy: { orden: "asc" },
   });
   const indice = campos.findIndex((c) => c.id === id);

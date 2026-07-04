@@ -17,6 +17,7 @@ const esquemaColor = z
   .regex(/^#[0-9a-fA-F]{6}$/, "Color inválido");
 
 export async function crearEtapa(
+  moduloId: string,
   nombre: string,
   color: string
 ): Promise<Resultado> {
@@ -25,9 +26,20 @@ export async function crearEtapa(
   const c = esquemaColor.safeParse(color);
   if (!c.success) return { ok: false, error: c.error.issues[0].message };
 
-  const max = await prisma.etapa.aggregate({ _max: { orden: true } });
+  const modulo = await prisma.modulo.findUnique({ where: { id: moduloId } });
+  if (!modulo) return { ok: false, error: "El módulo no existe" };
+
+  const max = await prisma.etapa.aggregate({
+    where: { moduloId },
+    _max: { orden: true },
+  });
   await prisma.etapa.create({
-    data: { nombre: n.data, color: c.data, orden: (max._max.orden ?? -1) + 1 },
+    data: {
+      nombre: n.data,
+      color: c.data,
+      orden: (max._max.orden ?? -1) + 1,
+      moduloId,
+    },
   });
   revalidatePath("/");
   return { ok: true };
@@ -61,7 +73,12 @@ export async function moverEtapa(
   id: string,
   direccion: -1 | 1
 ): Promise<Resultado> {
-  const etapas = await prisma.etapa.findMany({ orderBy: { orden: "asc" } });
+  const actual = await prisma.etapa.findUnique({ where: { id } });
+  if (!actual) return { ok: false, error: "La etapa no existe" };
+  const etapas = await prisma.etapa.findMany({
+    where: { moduloId: actual.moduloId },
+    orderBy: { orden: "asc" },
+  });
   const indice = etapas.findIndex((e) => e.id === id);
   if (indice === -1) return { ok: false, error: "La etapa no existe" };
   const vecina = etapas[indice + direccion];
@@ -94,10 +111,13 @@ export async function eliminarEtapa(
         error: `La etapa tiene ${cantidad} cliente(s). Selecciona a qué etapa moverlos antes de eliminarla.`,
       };
     }
-    const destino = await prisma.etapa.findUnique({
-      where: { id: etapaDestinoId },
-    });
+    const [actual, destino] = await Promise.all([
+      prisma.etapa.findUnique({ where: { id } }),
+      prisma.etapa.findUnique({ where: { id: etapaDestinoId } }),
+    ]);
     if (!destino) return { ok: false, error: "La etapa destino no existe" };
+    if (actual && destino.moduloId !== actual.moduloId)
+      return { ok: false, error: "La etapa destino debe ser del mismo módulo" };
     await prisma.cliente.updateMany({
       where: { etapaId: id },
       data: { etapaId: etapaDestinoId },

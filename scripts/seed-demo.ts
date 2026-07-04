@@ -12,9 +12,8 @@ async function limpiar() {
   await prisma.adjunto.deleteMany();
   await prisma.valorCampo.deleteMany();
   await prisma.cliente.deleteMany();
-  await prisma.etapa.deleteMany();
   await prisma.definicionCampo.deleteMany();
-  console.log("OK: base de datos vacía.");
+  console.log("OK: clientes, valores, adjuntos y campos eliminados (módulos y etapas se conservan).");
 }
 
 function enDias(dias: number): Date {
@@ -26,21 +25,35 @@ function enDias(dias: number): Date {
 async function sembrar() {
   await limpiar();
 
-  const prospeccion = await prisma.etapa.create({
-    data: { nombre: "Prospección", color: "#6366f1", orden: 0 },
+  // Siembra dentro del módulo Ventas (creado por la migración de módulos)
+  let modulo = await prisma.modulo.findFirst({
+    where: { nombre: "Ventas" },
+    include: { etapas: { orderBy: { orden: "asc" } } },
   });
-  const analisis = await prisma.etapa.create({
-    data: { nombre: "Análisis", color: "#f59e0b", orden: 1 },
-  });
-  const aprobado = await prisma.etapa.create({
-    data: { nombre: "Aprobado", color: "#10b981", orden: 2 },
-  });
+  if (!modulo) {
+    const creado = await prisma.modulo.create({
+      data: { nombre: "Ventas", orden: 0 },
+    });
+    modulo = { ...creado, etapas: [] };
+  }
+
+  let etapas = modulo.etapas;
+  if (etapas.length < 3) {
+    etapas = await Promise.all(
+      ["Prospecto", "Interesado", "Cliente"].map((nombre, i) =>
+        prisma.etapa.create({
+          data: { nombre, orden: i, moduloId: modulo.id },
+        })
+      )
+    );
+  }
+  const [prospeccion, analisis, aprobado] = etapas;
 
   const monto = await prisma.definicionCampo.create({
-    data: { nombre: "Monto", tipo: "NUMERO", orden: 0 },
+    data: { nombre: "Monto", tipo: "NUMERO", orden: 0, moduloId: modulo.id },
   });
   const telefono = await prisma.definicionCampo.create({
-    data: { nombre: "Teléfono", tipo: "TEXTO", orden: 1 },
+    data: { nombre: "Teléfono", tipo: "TEXTO", orden: 1, moduloId: modulo.id },
   });
   const banco = await prisma.definicionCampo.create({
     data: {
@@ -48,6 +61,7 @@ async function sembrar() {
       tipo: "SELECCION",
       opciones: JSON.stringify(["Banco Uno", "Banco Dos", "Banco Tres"]),
       orden: 2,
+      moduloId: modulo.id,
     },
   });
 
@@ -98,7 +112,7 @@ async function sembrar() {
     },
   });
 
-  console.log("OK: 3 etapas, 3 campos y 4 clientes demo creados.");
+  console.log(`OK: 3 campos y 4 clientes demo creados en el módulo "${modulo.nombre}".`);
 }
 
 async function main() {

@@ -43,9 +43,11 @@ type Formulario = {
 
 export default function ModalCampos({
   campos,
+  moduloId,
   alCerrar,
 }: {
   campos: DefinicionCampo[];
+  moduloId: string;
   alCerrar: () => void;
 }) {
   const [form, setForm] = useState<Formulario | null>(null);
@@ -91,7 +93,7 @@ export default function ModalCampos({
     };
     const res = form.id
       ? await actualizarCampo(form.id, datos)
-      : await crearCampo(datos);
+      : await crearCampo({ ...datos, moduloId });
     setOcupado(false);
     if (res.ok) setForm(null);
     else setError(res.error);
