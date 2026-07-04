@@ -2,12 +2,13 @@
 // típicos (fila válida, sin nombre, fecha DD/MM/AAAA, fecha inválida) y
 // ejercita analizarExcel + importarClientes.
 // Ejecutar: npx tsx scripts/test-importar.ts
+import "dotenv/config";
 import ExcelJS from "exceljs";
 import { PrismaClient } from "../app/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { analizarExcel, importarClientes } from "../lib/acciones/importar";
 
-const adapter = new PrismaBetterSqlite3({ url: "file:./dev.db" });
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {

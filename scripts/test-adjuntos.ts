@@ -1,11 +1,12 @@
 // Verifica la capa de almacenamiento: guarda una imagen PNG de prueba
 // para el primer cliente demo y crea su registro Adjunto.
 // Ejecutar: npx tsx scripts/test-adjuntos.ts
+import "dotenv/config";
 import { PrismaClient } from "../app/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { guardarArchivo } from "../lib/almacenamiento";
 
-const adapter = new PrismaBetterSqlite3({ url: "file:./dev.db" });
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
 // PNG válido de 1x1 pixel
@@ -33,7 +34,7 @@ async function main() {
     },
   });
   console.log(`OK: adjunto guardado para "${cliente.nombre}"`);
-  console.log(`URL: http://localhost:3000${adjunto.url}`);
+  console.log(`URL: ${adjunto.url}`);
   await prisma.$disconnect();
 }
 

@@ -1,10 +1,11 @@
 // Datos de demostración FICTICIOS (sin PII) para probar el tablero.
 // Ejecutar: npx tsx scripts/seed-demo.ts
 // Limpiar todo: npx tsx scripts/seed-demo.ts --limpiar
+import "dotenv/config";
 import { PrismaClient } from "../app/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-const adapter = new PrismaBetterSqlite3({ url: "file:./dev.db" });
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
 async function limpiar() {

@@ -1,5 +1,5 @@
 // Esquema del CRM de prueba V1 — Proyecto A&C
-// Dev local: SQLite. Producción (E5): se migra el datasource a Postgres (Neon/Vercel).
+// Base de datos: Postgres (Neon vía Vercel), misma para dev y producción.
 
 generator client {
   provider = "prisma-client"
@@ -7,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 // Columnas del Kanban — 100% configurables desde la UI

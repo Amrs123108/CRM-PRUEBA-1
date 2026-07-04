@@ -21,15 +21,16 @@ interfaz. Versión de prueba para demostración.
 ## Stack
 
 - Next.js 16 (App Router) + Tailwind CSS v4
-- Prisma 7 + SQLite en desarrollo local (migrará a Vercel Postgres en producción)
-- Adjuntos en disco local vía `./uploads` (migrará a Vercel Blob en producción)
+- Prisma 7 + Postgres (Neon vía Vercel) — misma base en dev y producción
+- Adjuntos en Vercel Blob (producción) o `./uploads` (dev local sin token)
 
 ## Desarrollo local
 
 ```bash
-npm install
-npx prisma migrate dev   # crea la base de datos local (dev.db)
-npm run dev              # http://localhost:3000
+npm install                  # también genera el cliente Prisma (postinstall)
+npx vercel link              # vincula con el proyecto de Vercel
+npx vercel env pull .env     # trae DATABASE_URL y BLOB_READ_WRITE_TOKEN
+npm run dev                  # http://localhost:3000
 ```
 
 Datos de demostración (ficticios): `npx tsx scripts/seed-demo.ts`

@@ -1,10 +1,11 @@
 // Prueba de humo: verifica conexión a la BD y CRUD básico.
 // Ejecutar: npx tsx scripts/smoke-test.ts
+import "dotenv/config";
 import { PrismaClient } from "../app/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaPg } from "@prisma/adapter-pg";
 
 async function main() {
-  const adapter = new PrismaBetterSqlite3({ url: "file:./dev.db" });
+  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
   const prisma = new PrismaClient({ adapter });
 
   const etapa = await prisma.etapa.create({

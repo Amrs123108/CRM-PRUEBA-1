@@ -1,8 +1,9 @@
 // Almacenamiento de adjuntos.
-// Dev local: escribe en ./uploads (fuera de git) y sirve vía /api/archivos.
-// En E5 (producción) esta capa se cambia por Vercel Blob sin tocar el resto.
+// Producción (Vercel): Vercel Blob (detectado por BLOB_READ_WRITE_TOKEN).
+// Dev local sin token: escribe en ./uploads y sirve vía /api/archivos.
 import { mkdir, writeFile, unlink } from "fs/promises";
 import path from "path";
+import { put, del } from "@vercel/blob";
 
 export const TAMANO_MAXIMO = 8 * 1024 * 1024; // 8 MB
 
@@ -20,6 +21,10 @@ export function esImagen(tipoMime: string): boolean {
 
 const DIR_UPLOADS = path.join(process.cwd(), "uploads");
 
+function usarBlob(): boolean {
+  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+}
+
 // Nombre físico seguro: uuid + extensión validada (nunca el nombre original)
 export async function guardarArchivo(
   clienteId: string,
@@ -30,16 +35,36 @@ export async function guardarArchivo(
   if (archivo.size > TAMANO_MAXIMO) throw new Error("El archivo supera 8 MB");
 
   const nombreArchivo = `${crypto.randomUUID()}${extension}`;
+
+  if (usarBlob()) {
+    const blob = await put(`adjuntos/${clienteId}/${nombreArchivo}`, archivo, {
+      access: "public",
+      contentType: archivo.type,
+    });
+    return { url: blob.url, nombreArchivo };
+  }
+
   const dir = path.join(DIR_UPLOADS, clienteId);
   await mkdir(dir, { recursive: true });
   const buffer = Buffer.from(await archivo.arrayBuffer());
   await writeFile(path.join(dir, nombreArchivo), buffer);
-
   return { url: `/api/archivos/${clienteId}/${nombreArchivo}`, nombreArchivo };
 }
 
 export async function eliminarArchivo(url: string): Promise<void> {
-  // url esperada: /api/archivos/{clienteId}/{nombreArchivo}
+  // URL absoluta → Vercel Blob
+  if (url.startsWith("http")) {
+    if (usarBlob()) {
+      try {
+        await del(url);
+      } catch {
+        // si el blob ya no existe, no es un error fatal
+      }
+    }
+    return;
+  }
+
+  // URL local: /api/archivos/{clienteId}/{nombreArchivo}
   const partes = url.split("/").filter(Boolean);
   const clienteId = partes[2];
   const nombreArchivo = partes[3];
