@@ -137,7 +137,6 @@ export default function Dashboard({ modulos, moduloActivo, datos }: Props) {
               logrado={datos.meta.logradoClientes}
               meta={datos.meta.metaClientes}
               formato={(n) => String(n)}
-              color="#7c3aed"
             />
           </TarjetaBento>
           <TarjetaBento titulo="Meta de monto del mes">
@@ -146,7 +145,6 @@ export default function Dashboard({ modulos, moduloActivo, datos }: Props) {
               logrado={datos.meta.logradoMonto}
               meta={datos.meta.metaMonto}
               formato={formatoMonto}
-              color="#059669"
             />
           </TarjetaBento>
           <TarjetaBento titulo="Vencimiento" className="sm:col-span-2">
