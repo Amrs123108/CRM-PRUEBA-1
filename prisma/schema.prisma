@@ -18,6 +18,7 @@ model Modulo {
   orden    Int
   etapas   Etapa[]
   campos   DefinicionCampo[]
+  metas    Meta[]
   creadoEn DateTime          @default(now())
 }
 
@@ -51,15 +52,18 @@ model Cliente {
 // Constructor de campos tipo Airtable.
 // tipo: TEXTO | NUMERO | FECHA | SELECCION (SQLite no soporta enums)
 model DefinicionCampo {
-  id       String       @id @default(cuid())
-  nombre   String
-  tipo     String
-  opciones String? // JSON string con las opciones cuando tipo = SELECCION
-  orden    Int
-  moduloId String
-  modulo   Modulo       @relation(fields: [moduloId], references: [id], onDelete: Cascade)
-  valores  ValorCampo[]
-  creadoEn DateTime     @default(now())
+  id          String       @id @default(cuid())
+  nombre      String
+  tipo        String
+  opciones    String? // JSON string con las opciones cuando tipo = SELECCION
+  // Marca el campo NUMERO cuyo valor representa el dinero del cliente
+  // (uno por módulo). El dashboard lo usa para sumar montos por etapa.
+  esMonetario Boolean      @default(false)
+  orden       Int
+  moduloId    String
+  modulo      Modulo       @relation(fields: [moduloId], references: [id], onDelete: Cascade)
+  valores     ValorCampo[]
+  creadoEn    DateTime     @default(now())
 }
 
 model ValorCampo {
@@ -90,4 +94,17 @@ model Adjunto {
 model Configuracion {
   id        Int @id @default(1)
   diasAviso Int @default(3)
+}
+
+// Meta mensual por módulo para los velocímetros del dashboard.
+// Se guarda una fila por mes ("AAAA-MM") para conservar el historial.
+model Meta {
+  id           String  @id @default(cuid())
+  moduloId     String
+  modulo       Modulo  @relation(fields: [moduloId], references: [id], onDelete: Cascade)
+  mes          String
+  metaClientes Int     @default(0)
+  metaMonto    Float   @default(0)
+
+  @@unique([moduloId, mes])
 }

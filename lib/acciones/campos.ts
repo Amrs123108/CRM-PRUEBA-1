@@ -26,6 +26,7 @@ export async function crearCampo(datos: {
   nombre: string;
   tipo: string;
   opciones?: string[];
+  esMonetario?: boolean;
 }): Promise<Resultado> {
   const n = esquemaNombre.safeParse(datos.nombre);
   if (!n.success) return { ok: false, error: n.error.issues[0].message };
@@ -44,20 +45,33 @@ export async function crearCampo(datos: {
     opciones = JSON.stringify(limpias);
   }
 
+  const esMonetario = datos.tipo === "NUMERO" && !!datos.esMonetario;
+
   const max = await prisma.definicionCampo.aggregate({
     where: { moduloId: datos.moduloId },
     _max: { orden: true },
   });
-  await prisma.definicionCampo.create({
-    data: {
-      nombre: n.data,
-      tipo: datos.tipo,
-      opciones,
-      orden: (max._max.orden ?? -1) + 1,
-      moduloId: datos.moduloId,
-    },
+  await prisma.$transaction(async (tx) => {
+    // Solo un campo monetario por módulo: si se marca este, se desmarcan los demás
+    if (esMonetario) {
+      await tx.definicionCampo.updateMany({
+        where: { moduloId: datos.moduloId, esMonetario: true },
+        data: { esMonetario: false },
+      });
+    }
+    await tx.definicionCampo.create({
+      data: {
+        nombre: n.data,
+        tipo: datos.tipo,
+        opciones,
+        esMonetario,
+        orden: (max._max.orden ?? -1) + 1,
+        moduloId: datos.moduloId,
+      },
+    });
   });
   revalidatePath("/");
+  revalidatePath("/dashboard");
   return { ok: true };
 }
 
@@ -65,7 +79,7 @@ export async function crearCampo(datos: {
 // como texto); solo cambia cómo se captura de aquí en adelante.
 export async function actualizarCampo(
   id: string,
-  datos: { nombre: string; tipo: string; opciones?: string[] }
+  datos: { nombre: string; tipo: string; opciones?: string[]; esMonetario?: boolean }
 ): Promise<Resultado> {
   const n = esquemaNombre.safeParse(datos.nombre);
   if (!n.success) return { ok: false, error: n.error.issues[0].message };
@@ -82,11 +96,22 @@ export async function actualizarCampo(
     opciones = JSON.stringify(limpias);
   }
 
-  await prisma.definicionCampo.update({
-    where: { id },
-    data: { nombre: n.data, tipo: datos.tipo, opciones },
+  const esMonetario = datos.tipo === "NUMERO" && !!datos.esMonetario;
+
+  await prisma.$transaction(async (tx) => {
+    if (esMonetario) {
+      await tx.definicionCampo.updateMany({
+        where: { moduloId: existe.moduloId, esMonetario: true, id: { not: id } },
+        data: { esMonetario: false },
+      });
+    }
+    await tx.definicionCampo.update({
+      where: { id },
+      data: { nombre: n.data, tipo: datos.tipo, opciones, esMonetario },
+    });
   });
   revalidatePath("/");
+  revalidatePath("/dashboard");
   return { ok: true };
 }
 

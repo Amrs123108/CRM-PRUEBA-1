@@ -12,6 +12,7 @@ import {
   Hash,
   CalendarDays,
   List,
+  DollarSign,
 } from "lucide-react";
 import type { DefinicionCampo, TipoCampo } from "@/lib/tipos";
 import { TIPOS_CAMPO, ETIQUETA_TIPO_CAMPO } from "@/lib/tipos";
@@ -39,6 +40,7 @@ type Formulario = {
   nombre: string;
   tipo: TipoCampo;
   opciones: string; // una por línea
+  esMonetario: boolean;
 };
 
 export default function ModalCampos({
@@ -60,7 +62,7 @@ export default function ModalCampos({
 
   function abrirCrear() {
     setError(null);
-    setForm({ id: null, nombre: "", tipo: "TEXTO", opciones: "" });
+    setForm({ id: null, nombre: "", tipo: "TEXTO", opciones: "", esMonetario: false });
   }
 
   function abrirEditar(campo: DefinicionCampo) {
@@ -78,6 +80,7 @@ export default function ModalCampos({
       nombre: campo.nombre,
       tipo: campo.tipo as TipoCampo,
       opciones,
+      esMonetario: campo.esMonetario,
     });
   }
 
@@ -90,6 +93,7 @@ export default function ModalCampos({
       nombre: form.nombre,
       tipo: form.tipo,
       opciones: form.opciones.split("\n"),
+      esMonetario: form.esMonetario,
     };
     const res = form.id
       ? await actualizarCampo(form.id, datos)
@@ -163,8 +167,16 @@ export default function ModalCampos({
               >
                 <Icono className="size-4 shrink-0 text-zinc-400" />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-zinc-800">
+                  <p className="flex items-center gap-1.5 truncate text-sm font-medium text-zinc-800">
                     {campo.nombre}
+                    {campo.esMonetario && (
+                      <span
+                        className="inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700"
+                        title="Valor monetario del dashboard"
+                      >
+                        <DollarSign className="size-3" />
+                      </span>
+                    )}
                   </p>
                   <p className="text-[11px] text-zinc-400">
                     {ETIQUETA_TIPO_CAMPO[campo.tipo as TipoCampo] ?? campo.tipo}
@@ -262,6 +274,28 @@ export default function ModalCampos({
                   placeholder={"Banco Uno\nBanco Dos\nBanco Tres"}
                 />
               </div>
+            )}
+            {form.tipo === "NUMERO" && (
+              <label className="flex items-start gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-700">
+                <input
+                  type="checkbox"
+                  checked={form.esMonetario}
+                  onChange={(e) =>
+                    setForm({ ...form, esMonetario: e.target.checked })
+                  }
+                  className="mt-0.5 size-4 accent-violet-600"
+                />
+                <span>
+                  <span className="font-medium text-zinc-800">
+                    Usar como valor monetario
+                  </span>
+                  <br />
+                  <span className="text-xs text-zinc-400">
+                    Este es el campo que el dashboard sumará como dinero por
+                    etapa. Solo puede haber uno marcado por módulo.
+                  </span>
+                </span>
+              </label>
             )}
             {error && (
               <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">

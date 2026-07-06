@@ -24,6 +24,7 @@ import {
   Menu,
   ChevronLeft,
   ChevronRight,
+  LayoutDashboard,
 } from "lucide-react";
 import type {
   EtapaConClientes,
@@ -287,7 +288,7 @@ export default function Tablero({
         <h1 className="mr-1 text-3xl font-bold tracking-tight text-zinc-900">
           CRM de prueba
         </h1>
-        {/* En móvil, Settings se agrupa dentro del menú "☰" */}
+        {/* En móvil, Settings y Dashboard se agrupan dentro del menú "☰" */}
         <div className="hidden sm:contents">
           <button
             onClick={() => setModal({ tipo: "config" })}
@@ -296,6 +297,13 @@ export default function Tablero({
           >
             <Settings className="size-4.5" /> Settings
           </button>
+          <Link
+            href={moduloActivo ? `/dashboard?modulo=${moduloActivo.id}` : "/dashboard"}
+            className={pildoraBlanca}
+            title="Ver dashboard"
+          >
+            <LayoutDashboard className="size-4.5" /> Dashboard
+          </Link>
         </div>
 
         {/* Módulos como píldoras */}
@@ -384,6 +392,13 @@ export default function Tablero({
                 >
                   <Settings className="size-4" /> Settings
                 </button>
+                <Link
+                  href={moduloActivo ? `/dashboard?modulo=${moduloActivo.id}` : "/dashboard"}
+                  onClick={() => setMenuMovilAbierto(false)}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-50"
+                >
+                  <LayoutDashboard className="size-4" /> Dashboard
+                </Link>
                 <button
                   onClick={() => {
                     setMenuMovilAbierto(false);
