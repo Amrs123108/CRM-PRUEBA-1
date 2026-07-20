@@ -51,3 +51,6 @@ dev.db-journal
 
 .vercel
 .env*
+
+# Proteccion PII y entorno
+data/
